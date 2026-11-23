@@ -39,6 +39,81 @@ DB = os.path.join(BASE, "data", "app.db")
 HELPER_PATH = os.path.join(BASE, "helper", "helper.py")
 PLATFORMS = ("geforce", "windows", "mac")
 
+SAMPLE_REVIEW = {
+    "id": "sample-arabia-3v3",
+    "job_id": "sample-arabia-3v3",
+    "title": "Sample Showcase: 3v3 Arabia (Flank Archers + Pocket Knights)",
+    "platform": "geforce",
+    "replay_choice": "Arabia 3v3 Match",
+    "in_game_name": "Jurchen Pocket",
+    "duration_s": 2420,
+    "draft_only": False,
+    "draft_reasons": [],
+    "camera": {
+        "directed": True,
+        "fight_windows": 18,
+        "coverage": "Full match coverage across all 6 player bases and front lines",
+    },
+    "audio_file": "sample-review.mp3",
+    "audio_script": "Tactical breakdown: Roles matter more than civilizations. Standard open map shape is flank archers plus pocket cavalry. Reinforce pressured flanks rather than solo raiding.",
+    "phases": [
+        {
+            "phase": "Opening (0:00 to 10:00)",
+            "start_s": 0,
+            "end_s": 600,
+            "focus": "Dark Age execution: consistent villager queue at Town Center, early boar and deer harvesting, and early walling on exposed flank woodlines."
+        },
+        {
+            "phase": "Feudal to Castle Transition (10:00 to 20:00)",
+            "start_s": 600,
+            "end_s": 1200,
+            "focus": "Military engagement timing: flank archers applied forward pressure while pocket knights reinforced the pressured flank rather than taking solo mid-map skirmishes."
+        },
+        {
+            "phase": "Castle Age Frontline War (20:00 to 30:00)",
+            "start_s": 1200,
+            "end_s": 1800,
+            "focus": "Relic control, forward siege workshops, and additional Town Centers. Avoided taking cavalry fights directly under enemy castle fire."
+        },
+        {
+            "phase": "Imperial Endgame (30:00 to 40:00+)",
+            "start_s": 1800,
+            "end_s": 2420,
+            "focus": "Trade cart production, counter-unit balance (skirmishers vs archers, halberdiers vs cavalry), and aggressive raiding into enemy trade lines."
+        }
+    ],
+    "tips": [
+        {
+            "phase": "Opening",
+            "kind": "Economic Habit",
+            "tip": "Town Center idle time was kept under 12 seconds in Dark Age. However, exterior woodline walling was delayed until 14:00, leaving villagers exposed to enemy scout raids.",
+            "drill": "Practice the 21-pop scout/archer build order. Place palisade walls along exterior tree lines before clicking Feudal Age.",
+            "evidence": "Observed via Town Center camera audit (visual video)"
+        },
+        {
+            "phase": "Castle Transition",
+            "kind": "Military Coordination",
+            "tip": "Strong pocket reinforcement at 16:30 turned a 2v1 flank pressure into an enemy retreat. Unit counter-composition was optimal (knights cleared enemy skirmishers).",
+            "drill": "Set camera hotkeys for both flanks and pan every 30 seconds to monitor your teammate's wall integrity.",
+            "evidence": "Observed via director fight prioritization at East Flank (visual video)"
+        },
+        {
+            "phase": "Imperial War",
+            "kind": "Macro & Stockpiles",
+            "tip": "Floating food exceeded 2,200 at 32:00 while trade carts were neglected. Queue additional stables and keep floating resources under 500.",
+            "drill": "Build 4 additional production buildings whenever floating bank passes 1,000 resources.",
+            "evidence": "Parser estimates supported by camera visual confirmation of idle stockpiles"
+        }
+    ],
+    "clips": [],
+    "parser": {
+        "game_build": "188329",
+        "parser": "mgz-fast 1.0.0",
+        "unit_counters_amount_summed": {"cavalry": 42, "archers": 68, "siege": 9, "trade": 34}
+    }
+}
+
+
 
 def db():
     os.makedirs(os.path.dirname(DB), exist_ok=True)
@@ -124,7 +199,7 @@ class H(BaseHTTPRequestHandler):
         except Exception:
             return {}
 
-    def send_file(self, path, ctype):
+    def send_file(self, path, ctype, headers=None):
         if not os.path.isfile(path):
             return self.send_json({"error": "not found"}, 404)
         with open(path, "rb") as f:
@@ -132,6 +207,9 @@ class H(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(body)))
+        if headers:
+            for k, v in headers.items():
+                self.send_header(k, v)
         self.end_headers()
         self.wfile.write(body)
 
@@ -208,6 +286,10 @@ class H(BaseHTTPRequestHandler):
             if not os.path.isfile(audio_path):
                 return self.send_json({"error": "audio file not found"}, 404)
             return self.send_file(audio_path, "audio/mpeg")
+        if path == "/api/sample-review" or path == "/api/reviews/sample-arabia-3v3":
+            return self.send_json({"review": SAMPLE_REVIEW})
+        if path == "/api/reviews/sample-arabia-3v3/audio":
+            return self.send_file(os.path.join(AUDIO, "sample-review.mp3"), "audio/mpeg")
         if path.startswith("/api/reviews/"):
             u = user_from_cookie(self)
             if not u:
@@ -230,10 +312,10 @@ class H(BaseHTTPRequestHandler):
             plat = path.rsplit("/", 1)[-1]
             if plat not in PLATFORMS:
                 return self.send_json({"error": "unknown platform"}, 400)
-            # In the skeleton the helper is a single script. The packaged
-            # build (see helper/PACKAGING.md) ships this same logic as a
-            # double-click installer with ffmpeg bundled and a custom
-            # protocol handler, so the end user never runs a script.
+            zip_pkg = os.path.join(BASE, "helper", "AoE2ReviewHelper.zip")
+            if plat in ("geforce", "mac") and os.path.isfile(zip_pkg):
+                return self.send_file(zip_pkg, "application/zip",
+                                      headers={"Content-Disposition": 'attachment; filename="AoE2ReviewHelper.zip"'})
             return self.send_file(HELPER_PATH, "text/x-python")
         if path.startswith("/api/jobs/") and path.endswith("/status"):
             # Phone-reachable status: token auth only (no login cookie
@@ -358,8 +440,10 @@ class H(BaseHTTPRequestHandler):
                        d.get("in_game_name", ""), d.get("camera_pace", "standard"), tok))
             c.commit(); c.close()
             host = self.headers.get("Host", "localhost")
+            scheme = "https" if "render.com" in host else "http"
+            server_url = f"{scheme}://{host}"
             return self.send_json({"job_id": jid, "token": tok,
-                                   "launch_url": f"aoe2review://job/{jid}?token={tok}",
+                                   "launch_url": f"aoe2review://job/{jid}?token={tok}&server={server_url}&platform={d['platform']}",
                                    "note": "Helper must be installed once (double-click installer). "
                                            "After that, the Launch button opens it automatically; "
                                            "the website never reads a local file uninvited."})

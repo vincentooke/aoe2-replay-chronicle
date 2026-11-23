@@ -47,6 +47,73 @@
       <p class="lede">Our camera director watches your actual match footage, tracks your economy and frontline battles, and produces a phase-by-phase tactical coaching report with voice analysis and fight video clips.</p>
     </section>
 
+    <!-- PREVIEW CAROUSEL: HOW IT WORKS -->
+    <section class="card showcase-card">
+      <div class="card-header-row">
+        <div class="header-title-group">
+          <span class="step-badge">Showcase</span>
+          <h2>How It Works: Camera Director in Action</h2>
+        </div>
+        <button type="button" id="viewSampleHeroBtn" class="btn small gold-btn">Explore Sample Review ⚔</button>
+      </div>
+      <p class="section-lead">Automated frame-by-frame match tracking watching your frontline battles and home town centers.</p>
+
+      <div class="carousel-container" id="showcaseCarousel">
+        <div class="carousel-slides">
+          <div class="carousel-slide active" data-index="0">
+            <div class="slide-visual">
+              <span class="slide-badge">Frontline</span>
+              <div class="slide-icon-box">⚔</div>
+            </div>
+            <div class="slide-content">
+              <h3>1. Frontline Battle Prioritization</h3>
+              <p>The director constantly scans the diamond minimap for combat clashes, dropping camera position to frontline battles the second military density crosses threshold.</p>
+            </div>
+          </div>
+          <div class="carousel-slide" data-index="1">
+            <div class="slide-visual">
+              <span class="slide-badge">Eco Audit</span>
+              <div class="slide-icon-box">🏛</div>
+            </div>
+            <div class="slide-content">
+              <h3>2. Town Center &amp; Macro Auditing</h3>
+              <p>During quiet macro intervals, the camera rotates between player bases to evaluate villager queues, woodline walling, and unspent floating resources.</p>
+            </div>
+          </div>
+          <div class="carousel-slide" data-index="2">
+            <div class="slide-visual">
+              <span class="slide-badge">Voice Coach</span>
+              <div class="slide-icon-box">🎙</div>
+            </div>
+            <div class="slide-content">
+              <h3>3. Spoken Tactical Walkthrough</h3>
+              <p>Generates a spoken audio breakdown voiced with strategic tips and customized practice drills for you and your teammates.</p>
+            </div>
+          </div>
+          <div class="carousel-slide" data-index="3">
+            <div class="slide-visual">
+              <span class="slide-badge">1.0x Micro</span>
+              <div class="slide-icon-box">🎬</div>
+            </div>
+            <div class="slide-content">
+              <h3>4. Normal-Speed Battle Clips</h3>
+              <p>Cuts 10 to 30 second micro clips from pivotal fights at 1.0x Normal speed so you can inspect army target-firing and retreat pathing without distortion.</p>
+            </div>
+          </div>
+        </div>
+        <div class="carousel-nav">
+          <button type="button" class="c-prev" id="cPrevBtn" aria-label="Previous Slide">‹</button>
+          <div class="carousel-dots" id="carouselDots">
+            <span class="c-dot active" data-index="0"></span>
+            <span class="c-dot" data-index="1"></span>
+            <span class="c-dot" data-index="2"></span>
+            <span class="c-dot" data-index="3"></span>
+          </div>
+          <button type="button" class="c-next" id="cNextBtn" aria-label="Next Slide">›</button>
+        </div>
+      </div>
+    </section>
+
     <!-- STEP 1: HELPER SETUP (FIRST AND FOREMOST) -->
     <section id="helperCard" class="card highlight-card">
       <div class="card-header-row">
@@ -60,9 +127,9 @@
 
       <div class="helper-box">
         <div class="helper-actions">
-          <a id="downloadHelperBtn" href="/api/helper/download/geforce" class="btn big gold-glow" download="helper.py">
-            <span>⬇ Download Helper for macOS</span>
-            <small>Mac (GeForce NOW &amp; Steam)</small>
+          <a id="downloadHelperBtn" href="/api/helper/download/geforce" class="btn big gold-glow" download="AoE2ReviewHelper.zip">
+            <span>⬇ Download Helper App for macOS</span>
+            <small>1-Click App Bundle (GeForce NOW &amp; Steam Mac)</small>
           </a>
           <div class="helper-sublinks">
             <span class="muted-text">Other systems:</span>
@@ -73,15 +140,15 @@
         <div class="helper-instructions">
           <div class="instruction-item">
             <span class="inst-num">1</span>
-            <span>Download the helper file to your Downloads folder</span>
+            <span>Download and double-click AoE2ReviewHelper.zip to extract</span>
           </div>
           <div class="instruction-item">
             <span class="inst-num">2</span>
-            <span>Keep it in Downloads (ready for one-click browser launch)</span>
+            <span>Keep AoE2ReviewHelper.app in Applications or Downloads</span>
           </div>
           <div class="instruction-item">
             <span class="inst-num">3</span>
-            <span>Ready! You can now launch reviews below anytime</span>
+            <span>Ready! You can now launch reviews below automatically</span>
           </div>
         </div>
       </div>
@@ -136,11 +203,24 @@
             <option value="fights">Fight Focused (Prioritizes front lines)</option>
           </select>
         </div>
+        <div>
+          <label for="coachMode">Coaching Voice &amp; Analysis</label>
+          <select id="coachMode">
+            <option value="builtin" selected>⚡ Fast Built-in Tactical Voice (Default, Free &amp; Instant)</option>
+            <option value="gemini">🧠 Deep Gemini Grandmaster Analysis (Optional, uses your free Gemini API key)</option>
+          </select>
+        </div>
         <div style="display:none;">
           <select id="replayChoice">
             <option value="newest" selected>Newest replay</option>
           </select>
         </div>
+      </div>
+
+      <div id="geminiKeyBox" style="display:none;margin-top:1rem;background:rgba(0,0,0,0.3);padding:1rem;border-radius:6px;border:1px solid var(--gold-dark);">
+        <label for="geminiApiKey">Google Gemini API Key <span class="hint">(Free from aistudio.google.com)</span></label>
+        <input id="geminiApiKey" type="password" placeholder="AIzaSy...">
+        <span class="input-hint">Used for your session to generate rich conversational grandmaster commentary</span>
       </div>
 
       <!-- Opt-In Consent -->
@@ -177,12 +257,120 @@
     <div class="ornament" aria-hidden="true"><span class="rule"></span><span class="diamond"></span><span class="rule"></span></div>
     <h2>Coaching Archives &amp; Replay Reports</h2>
     <p class="section-lead">Every reviewed game is saved here with phase-by-phase tactical breakdowns, spoken audio walkthroughs, and video clips.</p>
-    <div id="archivePrompt" class="note text-center" style="margin:1rem auto 1.5rem;max-width:400px;display:none;">
-      <p style="margin-bottom:0.75rem;">Sign in to view your saved match reviews and track your coaching progress.</p>
-      <button type="button" class="btn gold-btn" id="archiveSignInBtn">⚜ Sign In</button>
+
+    <!-- FEATURED SAMPLE SHOWCASE BANNER -->
+    <div class="sample-review-banner" id="sampleReviewCard">
+      <div class="sample-badge-bar">
+        <span class="tag ready">⭐ Featured Community Showcase</span>
+        <span class="sample-meta">Match Duration: 40:20 · 3v3 Arabia</span>
+      </div>
+      <div class="sample-main-content">
+        <div>
+          <h3 style="margin:0 0 0.3rem;color:var(--gold);">3v3 Arabia: Flank Archers &amp; Pocket Knights</h3>
+          <p style="margin:0;font-size:0.92rem;color:var(--text-muted);">Explore a full-length finished coaching review with playable voice breakdown, 40-minute phase analysis, and practice drills.</p>
+        </div>
+        <button type="button" id="loadSampleReviewBtn" class="btn gold-btn">Read Sample Review ⚔</button>
+      </div>
     </div>
-    <ul id="reviewList"></ul>
-    <div id="reviewDetail"></div>
+
+    <!-- ARCHIVE SUBTABS -->
+    <div class="subtabs-bar">
+      <button type="button" id="archiveTabReviews" class="subtab-btn active">⚔ Matches &amp; Reviews</button>
+      <button type="button" id="archiveTabHabits" class="subtab-btn">📈 Habits &amp; Trends</button>
+    </div>
+
+    <!-- SUBVIEW 1: MATCH REVIEWS -->
+    <div id="reviewsSubView">
+      <div id="archivePrompt" class="note text-center" style="margin:1rem auto 1.5rem;max-width:400px;display:none;">
+        <p style="margin-bottom:0.75rem;">Sign in to view your personal saved match reviews and track your coaching progress.</p>
+        <button type="button" class="btn gold-btn" id="archiveSignInBtn">⚜ Sign In</button>
+      </div>
+      <ul id="reviewList"></ul>
+      <div id="reviewDetail"></div>
+    </div>
+
+    <!-- SUBVIEW 2: HABITS & TRENDS DASHBOARD -->
+    <div id="habitsSubView" hidden>
+      <div class="habits-header" style="margin-bottom:1.2rem;">
+        <h3 style="margin-top:0;">Multi-Game Tactical Learning Loop</h3>
+        <p class="note">Identifies recurring habits across your reviewed games. 1 game = a finding · 2+ games with the same root cause = a habit.</p>
+      </div>
+
+      <!-- Trend Stat Cards -->
+      <div class="kv-grid" style="margin-bottom:1.5rem;">
+        <div class="kv-tile"><b>Tracked Games</b><span>1 Game (Showcase)</span></div>
+        <div class="kv-tile"><b>Dark Age TC Idle</b><span>Avg: 11s <small style="color:var(--green);">(Strong)</small></span></div>
+        <div class="kv-tile"><b>Castle Age Timing</b><span>Avg: 18:42</span></div>
+        <div class="kv-tile"><b>Key Focus Area</b><span>Exterior Woodline Walls</span></div>
+      </div>
+
+      <!-- Recurring Habit Cards -->
+      <div class="tips-grid" style="margin-bottom:1.8rem;">
+        <div class="tip-card">
+          <div class="tip-header">
+            <span class="tip-player">Identified Habit (2+ Games)</span>
+            <span class="tag" style="background:rgba(230,81,0,0.2);color:#ff9800;border-color:#ff9800;">Economy Leak</span>
+          </div>
+          <p class="tip-text"><strong>Delayed Woodline Walling:</strong> Exterior woodlines remained open until 14:00, leading to villager disruption when enemy scouts arrived.</p>
+          <div class="drill-box">
+            <div class="drill-title">Recommended Practice Drill</div>
+            <p class="drill-action">Place 3 to 4 palisade wall segments on exposed lumber camps before clicking Feudal Age.</p>
+          </div>
+        </div>
+
+        <div class="tip-card">
+          <div class="tip-header">
+            <span class="tip-player">Identified Habit (2+ Games)</span>
+            <span class="tag ready">Positive Strength</span>
+          </div>
+          <p class="tip-text"><strong>Flank Pocket Reinforcement:</strong> Consistently reinforced flank engagements within 30 seconds of military alerts, clearing enemy skirmishers.</p>
+          <div class="drill-box">
+            <div class="drill-title">Maintain Habit</div>
+            <p class="drill-action">Keep town center camera hotkeys mapped to verify flank wall integrity.</p>
+          </div>
+        </div>
+
+        <div class="tip-card">
+          <div class="tip-header">
+            <span class="tip-player">Identified Habit (2+ Games)</span>
+            <span class="tag" style="background:rgba(230,81,0,0.2);color:#ff9800;border-color:#ff9800;">Resource Banking</span>
+          </div>
+          <p class="tip-text"><strong>Unspent Imperial Food:</strong> Floating over 1,500 food in mid-Imperial while military production queues sit idle.</p>
+          <div class="drill-box">
+            <div class="drill-title">Recommended Practice Drill</div>
+            <p class="drill-action">Add 4 additional stables or barracks immediately whenever bank passes 1,000 resources.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Drills Checklist -->
+      <div class="card" style="background:rgba(0,0,0,0.4);border-color:var(--gold-dark);padding:1.4rem;">
+        <h3 style="margin-top:0;">⚔ Active Practice Drills Checklist</h3>
+        <p class="note">Check off drills as you complete them in single-player or ranked practice. Progress saves automatically.</p>
+        <div class="drills-checklist" id="drillsChecklist">
+          <label class="custom-checkbox drill-item">
+            <input type="checkbox" data-drill-id="drill_1">
+            <span class="checkbox-box"></span>
+            <span class="checkbox-text"><strong>Early Woodline Wall:</strong> Complete 21-pop build order with lumber camps fully walled before 10:00.</span>
+          </label>
+          <label class="custom-checkbox drill-item">
+            <input type="checkbox" data-drill-id="drill_2">
+            <span class="checkbox-box"></span>
+            <span class="checkbox-text"><strong>Zero TC Idle Time:</strong> Sustain Dark Age villager queue with under 15 seconds of total idle time.</span>
+          </label>
+          <label class="custom-checkbox drill-item">
+            <input type="checkbox" data-drill-id="drill_3">
+            <span class="checkbox-box"></span>
+            <span class="checkbox-text"><strong>Production Surge:</strong> Drop 4 extra production buildings the moment food passes 1,000 in Castle Age.</span>
+          </label>
+          <label class="custom-checkbox drill-item">
+            <input type="checkbox" data-drill-id="drill_4">
+            <span class="checkbox-box"></span>
+            <span class="checkbox-text"><strong>Flank Vision:</strong> Tap teammate camera hotkeys every 30 seconds during Feudal Age.</span>
+          </label>
+        </div>
+      </div>
+    </div>
   </section>
 
 </main>

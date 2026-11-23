@@ -5,6 +5,8 @@ uploads/*.mp4
 uploads/*.aoe2record
 clips/*.mp4
 audio/*.mp3
+!audio/sample-review.mp3
 data/*.db
 data/*.db-journal
+helper/AoE2ReviewHelper.app/
 .DS_Store

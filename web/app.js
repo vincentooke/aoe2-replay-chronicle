@@ -203,10 +203,10 @@ function updatePlatform(plat) {
     const span = dlBtn.querySelector("span");
     const small = dlBtn.querySelector("small");
     if (span) {
-      span.textContent = plat === "windows" ? "⬇ Download Helper for Windows" : "⬇ Download Helper for macOS";
+      span.textContent = plat === "windows" ? "⬇ Download Helper for Windows" : "⬇ Download Helper App for macOS";
     }
     if (small) {
-      small.textContent = plat === "geforce" ? "GeForce NOW on Mac" : (plat === "mac" ? "Steam on Mac" : "Steam on Windows");
+      small.textContent = plat === "windows" ? "Steam on Windows PC" : "1-Click App Bundle (GeForce NOW & Steam Mac)";
     }
   }
 
@@ -228,6 +228,26 @@ updatePlatform(platform);
 // Job Creation & Real-Time Status Polling
 // ==========================================================================
 
+// Coach Mode & Gemini Key Handling
+const coachModeSelect = $("coachMode");
+const geminiKeyBox = $("geminiKeyBox");
+const geminiApiKeyInput = $("geminiApiKey");
+
+if (geminiApiKeyInput) {
+  try {
+    const savedKey = localStorage.getItem("aoe2_gemini_api_key");
+    if (savedKey) geminiApiKeyInput.value = savedKey;
+  } catch (e) {}
+}
+
+if (coachModeSelect) {
+  coachModeSelect.onchange = () => {
+    if (geminiKeyBox) {
+      geminiKeyBox.style.display = coachModeSelect.value === "gemini" ? "block" : "none";
+    }
+  };
+}
+
 $("startBtn").onclick = async () => {
   if (!me) {
     openAuthModal("Please sign in or create an account to start your review.");
@@ -240,6 +260,12 @@ $("startBtn").onclick = async () => {
     return;
   }
 
+  const coachMode = coachModeSelect ? coachModeSelect.value : "builtin";
+  const geminiKey = geminiApiKeyInput ? geminiApiKeyInput.value.trim() : "";
+  if (geminiKey) {
+    try { localStorage.setItem("aoe2_gemini_api_key", geminiKey); } catch (e) {}
+  }
+
   $("startBtn").disabled = true;
   $("startBtn").textContent = "Creating Job…";
 
@@ -248,6 +274,8 @@ $("startBtn").onclick = async () => {
     replay_choice: $("replayChoice").value,
     in_game_name: $("ign").value.trim() || "Player",
     camera_pace: $("cameraPace").value,
+    coach_mode: coachMode,
+    gemini_api_key: geminiKey,
     opt_in: optInChecked
   };
 
@@ -718,6 +746,95 @@ window.feedback = async (id, kind) => {
     alert(data.error || "Could not record feedback.");
   }
 };
+
+// ==========================================================================
+// Showcase Carousel & Sample Review Loader
+// ==========================================================================
+
+let currentSlideIdx = 0;
+const slides = document.querySelectorAll(".carousel-slide");
+const dots = document.querySelectorAll(".c-dot");
+
+function showSlide(idx) {
+  if (!slides.length) return;
+  currentSlideIdx = (idx + slides.length) % slides.length;
+  slides.forEach((s, i) => s.classList.toggle("active", i === currentSlideIdx));
+  dots.forEach((d, i) => d.classList.toggle("active", i === currentSlideIdx));
+}
+
+const cPrevBtn = $("cPrevBtn");
+const cNextBtn = $("cNextBtn");
+if (cPrevBtn) cPrevBtn.onclick = () => showSlide(currentSlideIdx - 1);
+if (cNextBtn) cNextBtn.onclick = () => showSlide(currentSlideIdx + 1);
+
+dots.forEach((d) => {
+  d.onclick = () => showSlide(parseInt(d.dataset.index, 10));
+});
+
+// Auto-advance carousel every 7 seconds
+setInterval(() => {
+  showSlide(currentSlideIdx + 1);
+}, 7000);
+
+async function loadSampleReview() {
+  switchTab("archives");
+  const { status, data } = await api("/api/sample-review");
+  if (status === 200 && data.review) {
+    renderReview(data.review);
+    const detail = $("reviewDetail");
+    if (detail) detail.scrollIntoView({ behavior: "smooth" });
+  }
+}
+
+const loadSampleReviewBtn = $("loadSampleReviewBtn");
+if (loadSampleReviewBtn) loadSampleReviewBtn.onclick = loadSampleReview;
+
+const viewSampleHeroBtn = $("viewSampleHeroBtn");
+if (viewSampleHeroBtn) viewSampleHeroBtn.onclick = loadSampleReview;
+
+// ==========================================================================
+// Archive Subtabs & Interactive Drills Checklist
+// ==========================================================================
+
+const archiveTabReviews = $("archiveTabReviews");
+const archiveTabHabits = $("archiveTabHabits");
+const reviewsSubView = $("reviewsSubView");
+const habitsSubView = $("habitsSubView");
+
+if (archiveTabReviews && archiveTabHabits) {
+  archiveTabReviews.onclick = () => {
+    archiveTabReviews.classList.add("active");
+    archiveTabHabits.classList.remove("active");
+    if (reviewsSubView) reviewsSubView.hidden = false;
+    if (habitsSubView) habitsSubView.hidden = true;
+  };
+  archiveTabHabits.onclick = () => {
+    archiveTabHabits.classList.add("active");
+    archiveTabReviews.classList.remove("active");
+    if (habitsSubView) habitsSubView.hidden = false;
+    if (reviewsSubView) reviewsSubView.hidden = true;
+  };
+}
+
+// Interactive Drills Checklist Persistence
+const drillCheckboxes = document.querySelectorAll("#drillsChecklist input[type='checkbox']");
+let savedDrills = {};
+try {
+  savedDrills = JSON.parse(localStorage.getItem("aoe2_completed_drills") || "{}");
+} catch (e) {}
+
+drillCheckboxes.forEach((cb) => {
+  const id = cb.dataset.drillId;
+  if (id && savedDrills[id]) {
+    cb.checked = true;
+  }
+  cb.onchange = () => {
+    savedDrills[id] = cb.checked;
+    try {
+      localStorage.setItem("aoe2_completed_drills", JSON.stringify(savedDrills));
+    } catch (e) {}
+  };
+});
 
 // Start application
 refreshMe();

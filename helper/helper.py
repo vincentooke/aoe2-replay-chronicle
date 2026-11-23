@@ -4824,6 +4824,26 @@ def run_real_capture(args, ffmpeg: str, device_idx: str | None = None) -> int:
 
 
 def main():
+    raw_args = sys.argv[1:]
+    for arg in raw_args:
+        if arg.startswith("aoe2review://"):
+            from urllib.parse import urlparse, parse_qs
+            parsed = urlparse(arg)
+            path_parts = parsed.path.strip("/").split("/")
+            job_id = path_parts[-1] if (path_parts and path_parts[-1]) else parsed.netloc
+            qs = parse_qs(parsed.query)
+            token = qs.get("token", [""])[0]
+            server = qs.get("server", ["https://aoe2-replay-chronicle.onrender.com"])[0]
+            platform = qs.get("platform", ["geforce"])[0]
+            sys.argv = [
+                sys.argv[0],
+                "--job", job_id,
+                "--token", token,
+                "--server", server,
+                "--platform", platform
+            ]
+            break
+
     ap = argparse.ArgumentParser()
     ap.add_argument("--job", required=True)
     ap.add_argument("--token", required=True)
