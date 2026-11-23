@@ -140,6 +140,8 @@ def db():
     CREATE TABLE IF NOT EXISTS job_progress(id INTEGER PRIMARY KEY AUTOINCREMENT,
         job_id TEXT, stage TEXT, detail TEXT,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP);
+    CREATE TABLE IF NOT EXISTS waitlist(id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP);
     """)
     # Migrations for DBs created by the skeleton (idempotent, ignored
     # if the column already exists). parser_json stores the helper's
@@ -505,6 +507,14 @@ python3 "$HELPER" --job "{jid}" --token "{job['token']}" --server "{server_url}"
             return self.send_json({"ok": True}, headers={"Set-Cookie": f"session={tok}{cookie_suffix}"})
         if path == "/api/logout":
             return self.send_json({"ok": True}, headers={"Set-Cookie": f"session=; Path=/; Max-Age=0{cookie_suffix}"})
+        if path == "/api/waitlist":
+            d = self.read_json()
+            email = d.get("email", "").strip()
+            if email:
+                c = db()
+                c.execute("INSERT INTO waitlist(email) VALUES(?)", (email,))
+                c.commit(); c.close()
+            return self.send_json({"ok": True})
         if path == "/api/jobs":
             u = user_from_cookie(self)
             if not u:

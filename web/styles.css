@@ -1347,6 +1347,219 @@ footer {
   font-weight: 600;
 }
 
+/* Mac Security Side-by-Side Visual Guide */
+.mac-security-guide {
+  grid-column: 1 / -1;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 1.1rem 1.3rem;
+  margin-top: 1rem;
+}
+
+.mac-security-guide .guide-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.9rem;
+}
+
+.mac-security-guide .guide-header h4 {
+  font-family: "Cinzel", Georgia, serif;
+  font-size: 1.05rem;
+  color: var(--brass-bright);
+  margin: 0;
+}
+
+.mac-security-guide .guide-header p {
+  font-size: 0.88rem;
+  color: var(--muted);
+  margin: 0.2rem 0 0;
+}
+
+.mac-security-guide .guide-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.1rem;
+}
+
+@media (max-width: 800px) {
+  .mac-security-guide .guide-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+.guide-card {
+  background: #1e1915;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.card-step-tag {
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin-bottom: 0.65rem;
+}
+
+.card-step-tag.highlight {
+  color: var(--gold);
+}
+
+.mac-dialog-mockup {
+  background: #28282b;
+  border: 1px solid #444;
+  border-radius: 10px;
+  padding: 1rem;
+  display: flex;
+  gap: 0.85rem;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+}
+
+.dialog-icon-box {
+  position: relative;
+  font-size: 1.8rem;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dialog-warn-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -4px;
+  font-size: 0.9rem;
+}
+
+.dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.dialog-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.dialog-body {
+  font-size: 0.8rem;
+  color: #bbb;
+  line-height: 1.35;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.4rem;
+}
+
+.mac-settings-mockup {
+  background: #252427;
+  border: 1px solid #3c3a42;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+}
+
+.settings-header {
+  background: #1b1a1d;
+  padding: 0.4rem 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-bottom: 1px solid #333;
+}
+
+.settings-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+.settings-dot.red { background: #ff5f56; }
+.settings-dot.yellow { background: #ffbd2e; }
+.settings-dot.green { background: #27c93f; }
+
+.settings-title {
+  font-size: 0.75rem;
+  color: #888;
+  margin-left: 0.4rem;
+  font-weight: 500;
+}
+
+.settings-body {
+  padding: 0.85rem;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  background: #313036;
+  padding: 0.7rem 0.85rem;
+  border-radius: 6px;
+}
+
+.security-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.security-text strong {
+  font-size: 0.84rem;
+  color: #fff;
+}
+
+.security-text span {
+  font-size: 0.75rem;
+  color: #aaa;
+}
+
+.mock-btn {
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  border-radius: 5px;
+  cursor: default;
+  display: inline-block;
+}
+
+.mock-btn.secondary {
+  background: #48484a;
+  color: #fff;
+}
+
+.mock-btn.primary-pulse {
+  background: var(--brass-bright);
+  color: #1a1510;
+  box-shadow: 0 0 10px var(--gold-glow);
+  animation: goldPulse 2s infinite ease-in-out;
+}
+
+@keyframes goldPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 10px var(--gold-glow); }
+  50% { transform: scale(1.05); box-shadow: 0 0 18px rgba(230,195,107,0.8); }
+}
+
+.guide-card-caption {
+  font-size: 0.84rem;
+  color: var(--ink);
+  margin: 0.65rem 0 0;
+  line-height: 1.4;
+}
+
 .helper-instructions {
   display: flex;
   flex-direction: column;
@@ -1793,6 +2006,84 @@ footer {
   text-decoration: line-through;
   opacity: 0.65;
 }
+
+/* Pro Tier Nav & Feature Grid */
+.pro-nav-btn {
+  background: transparent;
+  color: var(--brass-bright);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  padding: 0.45rem 0.85rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+}
+
+.pro-nav-btn:hover, .pro-nav-btn.active {
+  background: rgba(212, 175, 55, 0.15);
+  border-color: var(--gold);
+  color: #fff;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+}
+
+.badge-soon {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  background: var(--gold-dark);
+  color: #1a1510;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.pro-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.2rem;
+  margin: 1.5rem 0;
+}
+
+.pro-feature-card {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  padding: 1.3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.pro-feature-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--gold);
+}
+
+.pro-icon {
+  font-size: 2rem;
+  margin-bottom: 0.2rem;
+}
+
+.pro-feature-card h3 {
+  font-family: "Cinzel", Georgia, serif;
+  font-size: 1.05rem;
+  color: var(--brass-bright);
+  margin: 0;
+}
+
+.pro-feature-card p {
+  font-size: 0.88rem;
+  color: var(--ink);
+  line-height: 1.45;
+  margin: 0;
+}
+
 
 
 

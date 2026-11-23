@@ -166,16 +166,19 @@ function switchTab(tab) {
   const tabs = {
     review: { btn: $("navNewReview"), view: $("viewReview") },
     live: { btn: $("navLiveJob"), view: $("viewLive") },
-    archives: { btn: $("navSavedReviews"), view: $("saved") }
+    archives: { btn: $("navSavedReviews"), view: $("saved") },
+    pro: { btn: $("navProTier"), view: $("viewPro") }
   };
   for (const [key, t] of Object.entries(tabs)) {
     if (!t.btn || !t.view) continue;
     if (key === tab) {
       t.btn.classList.add("active");
       t.view.hidden = false;
+      t.view.style.display = "block";
     } else {
       t.btn.classList.remove("active");
       t.view.hidden = true;
+      t.view.style.display = "none";
     }
   }
   if (tab === "archives" && me) {
@@ -187,6 +190,36 @@ function switchTab(tab) {
 $("navNewReview").onclick = () => switchTab("review");
 $("navLiveJob").onclick = () => switchTab("live");
 $("navSavedReviews").onclick = () => switchTab("archives");
+const navProTier = $("navProTier");
+if (navProTier) navProTier.onclick = () => switchTab("pro");
+
+// Pro Tier Waitlist Form Handling
+const proWaitlistForm = $("proWaitlistForm");
+const proWaitlistMsg = $("proWaitlistMsg");
+const proEmailInput = $("proEmail");
+
+if (proWaitlistForm) {
+  try {
+    const savedWaitlist = localStorage.getItem("aoe2_pro_waitlist");
+    if (savedWaitlist && proWaitlistMsg) {
+      proWaitlistMsg.style.display = "block";
+      if (proEmailInput) proEmailInput.value = savedWaitlist;
+    }
+  } catch (e) {}
+
+  proWaitlistForm.onsubmit = async (e) => {
+    e.preventDefault();
+    const email = proEmailInput ? proEmailInput.value.trim() : "";
+    if (!email) return;
+    try {
+      localStorage.setItem("aoe2_pro_waitlist", email);
+      await api("/api/waitlist", { email });
+    } catch (err) {}
+    if (proWaitlistMsg) proWaitlistMsg.style.display = "block";
+    const btn = proWaitlistForm.querySelector("button");
+    if (btn) btn.disabled = true;
+  };
+}
 
 // ==========================================================================
 // Platform Selection

@@ -4810,6 +4810,24 @@ def run_real_capture(args, ffmpeg: str, device_idx: str | None = None) -> int:
     heartbeat(args.server, args.job, args.token, "capture_stopped",
               f"finished {int(time.time() - start_t)}s capture")
 
+    # Automatic 5TB Google Drive cloud sync (if mounted locally)
+    gdrive_candidates = [
+        os.path.expanduser("~/Google Drive/My Drive/AoE2 Replays"),
+        os.path.expanduser("~/Library/CloudStorage/GoogleDrive-vincentooke@gmail.com/My Drive/AoE2 Replays"),
+        os.path.expanduser("~/Google Drive/AoE2 Replays")
+    ]
+    gdrive_dir = next((d for d in gdrive_candidates if os.path.isdir(d)), None)
+    if gdrive_dir and os.path.isfile(video_path):
+        try:
+            import shutil
+            dest = os.path.join(gdrive_dir, os.path.basename(video_path))
+            print(f"Syncing match video to 5TB Google Drive ({dest})...")
+            shutil.copy2(video_path, dest)
+            print("Google Drive cloud sync complete.")
+            heartbeat(args.server, args.job, args.token, "gdrive_synced", f"backed up to {dest}")
+        except Exception as ge:
+            print(f"Google Drive sync note: {ge}")
+
     if args.server:
         heartbeat(args.server, args.job, args.token, "uploading", "uploading video to server")
         try:

@@ -26,6 +26,7 @@
       <button type="button" id="navNewReview" class="active">Review Replay</button>
       <button type="button" id="navLiveJob">Live Progress</button>
       <button type="button" id="navSavedReviews">Coaching Archives</button>
+      <button type="button" id="navProTier" class="pro-nav-btn">⚜ Pro Tier <span class="badge-soon">Soon</span></button>
       <button type="button" id="navLoginBtn" class="login-nav-btn">⚜ Sign In</button>
       <span id="userBadge" class="user-badge" style="display:none;">
         <span id="userEmail"></span>
@@ -137,18 +138,57 @@
           </div>
         </div>
 
-        <div class="helper-instructions">
-          <div class="instruction-item">
-            <span class="inst-num">1</span>
-            <span>Download and double-click AoE2ReviewHelper.zip</span>
+        <!-- Side-by-Side macOS Visual Setup Guide (No Popups) -->
+        <div class="mac-security-guide">
+          <div class="guide-header">
+            <span class="guide-icon">🛡️</span>
+            <div>
+              <h4>Mac First-Time Open Guide (Happens only once)</h4>
+              <p>Because this companion app is downloaded directly from our site, macOS shows a one-time safety check.</p>
+            </div>
           </div>
-          <div class="instruction-item">
-            <span class="inst-num">2</span>
-            <span>Keep the app in Downloads (takes 5 MB)</span>
-          </div>
-          <div class="instruction-item">
-            <span class="inst-num">3</span>
-            <span>Ready! You can now start reviews below anytime</span>
+          <div class="guide-cards">
+            <!-- Card 1: What you will see -->
+            <div class="guide-card">
+              <div class="card-step-tag">1. What you will see</div>
+              <div class="mac-dialog-mockup">
+                <div class="dialog-icon-box">
+                  <div class="dialog-icon">🔒</div>
+                  <div class="dialog-warn-badge">⚠️</div>
+                </div>
+                <div class="dialog-content">
+                  <div class="dialog-title">&ldquo;AoE2ReviewHelper&rdquo; Not Opened</div>
+                  <div class="dialog-body">Apple could not verify &ldquo;AoE2ReviewHelper&rdquo; is free of malware that may harm your Mac or compromise your privacy.</div>
+                  <div class="dialog-actions">
+                    <span class="mock-btn secondary">Done</span>
+                  </div>
+                </div>
+              </div>
+              <p class="guide-card-caption">Click <strong>Done</strong> on the initial pop-up.</p>
+            </div>
+
+            <!-- Card 2: What to click -->
+            <div class="guide-card">
+              <div class="card-step-tag highlight">2. Click &ldquo;Open Anyway&rdquo;</div>
+              <div class="mac-settings-mockup">
+                <div class="settings-header">
+                  <span class="settings-dot red"></span>
+                  <span class="settings-dot yellow"></span>
+                  <span class="settings-dot green"></span>
+                  <span class="settings-title">System Settings &gt; Privacy &amp; Security</span>
+                </div>
+                <div class="settings-body">
+                  <div class="settings-row">
+                    <div class="security-text">
+                      <strong>Security</strong>
+                      <span>&ldquo;AoE2ReviewHelper&rdquo; was blocked from use because it is not from an identified developer.</span>
+                    </div>
+                    <span class="mock-btn primary-pulse">Open Anyway</span>
+                  </div>
+                </div>
+              </div>
+              <p class="guide-card-caption">Go to <strong>System Settings &gt; Privacy &amp; Security</strong>, scroll to Security, and click <strong>Open Anyway</strong>.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -383,6 +423,54 @@
       </div>
     </div>
   </section>
+
+  <!-- ============ TAB 4: PRO TIER PREVIEW ============ -->
+  <div id="viewPro" class="tab-view" style="display:none;">
+    <section class="card highlight-card">
+      <div class="card-header-row">
+        <div class="header-title-group">
+          <span class="step-badge">Preview</span>
+          <h2>⚜ Replay Chronicle PRO <span class="badge-rec">Coming Soon</span></h2>
+        </div>
+        <span class="tag gold">Roadmap</span>
+      </div>
+      <p class="section-lead">Automate match recording with cloud GPUs, get instant Discord coaching clips, and unlock 50-game tournament habit trackers.</p>
+
+      <div class="pro-grid">
+        <div class="pro-feature-card">
+          <div class="pro-icon">☁</div>
+          <h3>Cloud Spectator Recording</h3>
+          <p>Zero local app needed. Simply paste your replay file or link, and our high-powered cloud GPU spectator bot records and reviews your full game in the background.</p>
+        </div>
+        <div class="pro-feature-card">
+          <div class="pro-icon">🏆</div>
+          <h3>50-Game Habit Tracker</h3>
+          <p>Spot hidden tendencies across dozens of matches: pocket castle timings, scout losses before 10:00, and military production idle spikes.</p>
+        </div>
+        <div class="pro-feature-card">
+          <div class="pro-icon">🤖</div>
+          <h3>Instant Discord Bot Clips</h3>
+          <p>Phase-by-phase audio breakdowns and 15-second key fight video clips posted automatically to your team's Discord voice channel after every match.</p>
+        </div>
+        <div class="pro-feature-card">
+          <div class="pro-icon">⚔</div>
+          <h3>Personalized AI Practice Drills</h3>
+          <p>Interactive mini-scenarios designed specifically around the recurring tactical mistakes identified in your team games.</p>
+        </div>
+      </div>
+
+      <div class="callout-box" style="margin-top:1.8rem;background:rgba(212,175,55,0.06);border-left:3px solid var(--gold);padding:1.4rem;">
+        <h4 style="margin:0 0 0.5rem;font-family:'Cinzel',serif;color:var(--brass-bright);font-size:1.15rem;">Join the Pro Early Access Waitlist</h4>
+        <p style="margin:0 0 1rem;font-size:0.92rem;color:var(--muted);">Be the first to test cloud spectator recording when it launches. Our core replay coaching features will remain 100% free forever.</p>
+        
+        <form id="proWaitlistForm" style="display:flex;gap:0.75rem;max-width:540px;flex-wrap:wrap;">
+          <input type="email" id="proEmail" placeholder="Enter your email address" required style="flex:1;min-width:240px;padding:0.75rem 1rem;border-radius:6px;border:1px solid var(--line-strong);background:var(--panel-2);color:#fff;">
+          <button type="submit" class="btn gold-btn">Join Waitlist</button>
+        </form>
+        <div id="proWaitlistMsg" style="display:none;margin-top:0.75rem;font-weight:600;color:var(--gold);">⚔ You are on the waitlist! We will notify you when Pro opens.</div>
+      </div>
+    </section>
+  </div>
 
 </main>
 
