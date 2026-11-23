@@ -14,6 +14,20 @@
     <string>com.aoe2review.helper</string>
     <key>CFBundleName</key>
     <string>AoE2ReviewHelper</string>
+    <key>CFBundleDisplayName</key>
+    <string>AoE2 Review Helper</string>
+    <key>CFBundleExecutable</key>
+    <string>AoE2ReviewHelper</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>LSArchitecturePriority</key>
+    <array>
+        <string>arm64</string>
+    </array>
+    <key>LSMinimumSystemVersion</key>
+    <string>12.0</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
     <key>CFBundleURLTypes</key>
     <array>
         <dict>

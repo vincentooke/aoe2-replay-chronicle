@@ -1,0 +1,25 @@
+{
+  "cavalry": {
+    "unit": "Knights / Light Cavalry",
+    "primary_counters": ["Pikemen / Halberdiers (+22 / +32 bonus damage vs cavalry)", "Monks with Sanctity", "Heavy Camels"],
+    "countered_by": ["Crossbowmen balls with meatshield", "Mangonels in choke points"],
+    "micro_tactics": "Bait pikemen away before diving siege engines. Upgrade Scale/Chain Barding Armor before diving into archer balls."
+  },
+  "archers": {
+    "unit": "Crossbowmen / Foot Archers",
+    "primary_counters": ["Elite Skirmishers (+4 bonus damage vs archers, high pierce armor)", "Mangonels / Onagers (one shot wipes ball)", "Knights with +2 barding armor"],
+    "countered_by": ["Pikemen / Spearmen (deal almost zero damage to archers)", "Slow infantry (Militia line)"],
+    "micro_tactics": "Use Stand Ground stance and split formation ('X' key) when enemy mangonels fire. Keep a 5-6 spearman screen to prevent knight dives."
+  },
+  "siege": {
+    "unit": "Mangonels / Scorpions / Battering Rams",
+    "primary_counters": ["Cavalry flank charge", "Villager pull (villagers get bonus damage vs siege)", "Redemption Monks"],
+    "countered_by": ["Clumped foot archers", "Stationary defensive infantry"],
+    "micro_tactics": "Attack ground with mangonels on predictable archer movement paths."
+  },
+  "trash_wars": {
+    "unit": "Trash Triangle (Hussar, Halberdier, Elite Skirmisher)",
+    "mechanics": "Hussars counter Skirmishers; Skirmishers counter Halberdiers; Halberdiers counter Hussars.",
+    "macro_rule": "Sustain 60+ farms and 40+ trade carts in Imperial Age. Add 10-15 barracks and stables so reinforcements out-produce enemy casualties."
+  }
+}

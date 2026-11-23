@@ -1,0 +1,50 @@
+{
+  "Franks": {
+    "archetype": "Cavalry / Knight Rush",
+    "role": "Pocket",
+    "team_bonus": "Knights +2 line of sight",
+    "civ_bonuses": ["Farm upgrades free", "Cavalry +20% HP from Feudal Age", "Castles 25% cheaper"],
+    "power_spike": "Early Castle Age (19:00 - 22:00) 2-Stable Knight flood",
+    "counter_threats": ["Pikemen masses", "Monks with Redemption/Sanctity", "Camel Civs (Berbers, Hindustanis)"]
+  },
+  "Jurchens": {
+    "archetype": "Cavalry & Mobile Siege",
+    "role": "Pocket",
+    "team_bonus": "Stables work 15% faster",
+    "civ_bonuses": ["Mounted units resist pierce damage", "Hussar / Iron Pagoda transitions"],
+    "power_spike": "Mid-Castle Iron Pagoda push into Imperial trash wars",
+    "counter_threats": ["Halberdiers", "Camel archers"]
+  },
+  "Britons": {
+    "archetype": "Archer / Crossbow",
+    "role": "Flank",
+    "team_bonus": "Archery Ranges work 20% faster",
+    "civ_bonuses": ["Foot archers +1 range Castle, +1 Imperial", "Town Centers 50% cheaper wood from Castle Age", "Shepherds work 25% faster"],
+    "power_spike": "Feudal 2-Range Archers (12:00) and instant Bodkin Arrow Castle spike",
+    "counter_threats": ["Elite Skirmishers", "Mangonel shots", "Knights with +2 armor"]
+  },
+  "Portuguese": {
+    "archetype": "Versatile Gunpowder & Naval",
+    "role": "Flank / Flexible",
+    "team_bonus": "Free Cartography from Dark Age",
+    "civ_bonuses": ["All units cost -20% gold", "Technologies research 30% faster", "Feitoria available in Imperial Age"],
+    "power_spike": "Castle Age Organ Guns & Arquebus Bombard Cannons in late game",
+    "counter_threats": ["Fast cavalry raids before walls are sealed"]
+  },
+  "Chinese": {
+    "archetype": "Flexible Tech Tree / Macro",
+    "role": "Flank / Pocket",
+    "team_bonus": "Farms +45 food",
+    "civ_bonuses": ["Start with +3 villagers, -200 food, -50 wood", "Technologies cost -10% Feudal, -15% Castle, -20% Imperial", "Demolition ships +50% HP"],
+    "power_spike": "Early Castle Age economy lead and Chu Ko Nu massing",
+    "counter_threats": ["Onagers against Chu Ko Nu", "Heavy cavalry raids"]
+  },
+  "Mongols": {
+    "archetype": "Fast Scout / Cavalry Archer",
+    "role": "Flank or Pocket",
+    "team_bonus": "Scout Cavalry line +2 line of sight",
+    "civ_bonuses": ["Hunters work 40% faster", "Light Cavalry and Hussars +30% HP", "Mangudai fire instantly"],
+    "power_spike": "19-pop Dark Age Scout Rush (09:30) and Imperial Mangudai drill siege",
+    "counter_threats": ["Early walling neutralizing scouts", "Camel units"]
+  }
+}

@@ -2068,7 +2068,24 @@ footer {
 .pro-icon {
   font-size: 2rem;
   margin-bottom: 0.2rem;
+  display: flex;
+  align-items: center;
 }
+
+.pro-svg {
+  width: 32px;
+  height: 32px;
+  stroke: var(--gold);
+}
+
+.p-svg {
+  width: 22px;
+  height: 22px;
+  stroke: var(--brass-bright);
+  vertical-align: middle;
+  margin-right: 6px;
+}
+
 
 .pro-feature-card h3 {
   font-family: "Cinzel", Georgia, serif;

@@ -1,0 +1,61 @@
+{
+  "fast_castle_pocket": {
+    "name": "Fast Castle (27+2 Pop)",
+    "recommended_role": "Pocket",
+    "timing_benchmarks": {
+      "feudal_click": "08:15 (27 pop)",
+      "castle_click": "10:30 (29 pop)",
+      "castle_arrival": "13:10 - 14:00"
+    },
+    "critical_milestones": [
+      "Keep TC running 100% until 27 pop",
+      "Loom before clicking Feudal",
+      "Build Market + Blacksmith immediately on hitting Feudal",
+      "Seed 6 farms minimum before Castle Age to sustain 2-Stable Knight queue",
+      "Double-Bit Axe and Horse Collar teched on Feudal click"
+    ],
+    "common_leaks": [
+      "TC idle time > 20s delays Castle timing past 15:00",
+      "Unwalled woodlines allowing flank scout leak to kill pocket vills",
+      "Floating wood > 400 without placing farms"
+    ]
+  },
+  "scout_rush_flank": {
+    "name": "Scout Rush (20/21 Pop)",
+    "recommended_role": "Flank",
+    "timing_benchmarks": {
+      "feudal_click": "07:30 - 08:00",
+      "feudal_arrival": "09:40 - 10:10",
+      "first_3_scouts_out": "11:30"
+    },
+    "critical_milestones": [
+      "Stable queued immediately upon Feudal ding",
+      "Bloodlines teched if engaging enemy scouts",
+      "Wall exterior lumber camp while scouts harass enemy berries/gold",
+      "Transition 10-12 villagers to farms to prepare Castle Age click by 18:00 - 20:00"
+    ],
+    "common_leaks": [
+      "Diving scouts under enemy Town Center (costly loss of 240+ food in units)",
+      "Forgetting to wall base while focused on forward micro"
+    ]
+  },
+  "archer_rush_flank": {
+    "name": "2-Range Archer Flush (21/22 Pop)",
+    "recommended_role": "Flank",
+    "timing_benchmarks": {
+      "feudal_click": "08:00 - 08:25",
+      "feudal_arrival": "10:10 - 10:35",
+      "double_range_up": "11:30"
+    },
+    "critical_milestones": [
+      "Fletching researched at Blacksmith immediately",
+      "Gather 8-10 archers before moving out across mid-map",
+      "Maintain continuous production from 2 Archery Ranges (requires 7-8 gold vills, 10 wood vills)",
+      "Instant Bodkin Arrow + Crossbow upgrade clicked upon hitting Castle Age"
+    ],
+    "common_leaks": [
+      "Missing Fletching upgrade (+1 attack and range makes archers defeat unarmored skirmishers)",
+      "Getting caught out of position by pocket knights with +1 armor"
+    ]
+  }
+}

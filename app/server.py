@@ -28,6 +28,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 sys.path.insert(0, os.path.dirname(__file__))
 from analysis import analyze_video, generate_audio_report  # noqa: E402
 from learning import aggregate_feedback  # noqa: E402
+from chronicle import render_match_chronicle  # noqa: E402
 
 BASE = os.environ.get("AOE2_BASE", os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -290,8 +291,24 @@ class H(BaseHTTPRequestHandler):
             return self.send_file(audio_path, "audio/mpeg")
         if path == "/api/sample-review" or path == "/api/reviews/sample-arabia-3v3":
             return self.send_json({"review": SAMPLE_REVIEW})
+        if path == "/api/sample-review/chronicle" or path == "/api/reviews/sample-arabia-3v3/chronicle":
+            return self._send_html(render_match_chronicle(SAMPLE_REVIEW))
         if path == "/api/reviews/sample-arabia-3v3/audio":
             return self.send_file(os.path.join(AUDIO, "sample-review.mp3"), "audio/mpeg")
+        if path.startswith("/api/reviews/") and path.endswith("/chronicle"):
+            rid = path.split("/")[3]
+            u = user_from_cookie(self)
+            c = db()
+            if u:
+                row = c.execute("SELECT body_json FROM reviews WHERE id=? AND user_id=?", (rid, u["id"])).fetchone()
+            else:
+                tok = qs.get("token", [None])[0]
+                row = c.execute("SELECT r.body_json FROM reviews r JOIN jobs j ON j.id=r.job_id WHERE r.id=? AND j.token=?", (rid, tok)).fetchone() if tok else None
+            c.close()
+            if not row:
+                return self.send_json({"error": "not found"}, 404)
+            review_data = json.loads(row["body_json"])
+            return self._send_html(render_match_chronicle(review_data))
         if path.startswith("/api/reviews/"):
             u = user_from_cookie(self)
             if not u:

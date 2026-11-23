@@ -732,11 +732,15 @@ function renderReview(v) {
   }
 
   // Render Full Report DOM
+  const chronicleUrl = v.id === "sample-arabia-3v3" ? "/api/sample-review/chronicle" : `/api/reviews/${esc(v.id)}/chronicle`;
   container.innerHTML = `
     <div class="review-header-card">
       <div class="review-header-top">
         <h3 class="review-title">${esc(v.title || "Game Review")}</h3>
-        <span class="tag ${isDraft ? 'draft' : 'ready'}">${isDraft ? 'Draft Review' : 'Full Video Review'}</span>
+        <div style="display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap;">
+          <a class="btn gold-btn small" href="${chronicleUrl}" target="_blank">📜 Export Match Chronicle</a>
+          <span class="tag ${isDraft ? 'draft' : 'ready'}">${isDraft ? 'Draft Review' : 'Full Video Review'}</span>
+        </div>
       </div>
       <p class="note" style="margin-bottom:0.8rem;">Review ID: <code>${esc(v.id)}</code> · Player: <strong>${playerText}</strong></p>
 
