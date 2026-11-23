@@ -328,6 +328,7 @@ function renderActiveJobBox(job) {
       <div class="row-btns">
         <a class="btn big gold-btn" href="${esc(job.launch_url)}">⚔ Launch Camera Director</a>
         <a class="btn ghost" href="/api/helper/download/${esc(job.platform)}" download="AoE2ReviewHelper.zip">⬇ Download Helper (.zip)</a>
+        <button type="button" class="btn ghost danger-hover" id="cancelJobBtn" style="color:#e06c75;border-color:rgba(224,108,117,0.4);">✕ Cancel Review</button>
       </div>
       <div class="callout-box" style="margin-top:1rem;background:rgba(212,175,55,0.08);border-left:3px solid var(--gold);padding:0.9rem;">
         <p style="margin:0;font-size:0.92rem;line-height:1.5;">
@@ -369,6 +370,27 @@ function renderActiveJobBox(job) {
       </div>
     </div>
   `;
+
+  const cancelBtn = $("cancelJobBtn");
+  if (cancelBtn) {
+    cancelBtn.onclick = async () => {
+      if (activePollTimer) clearInterval(activePollTimer);
+      try {
+        sessionStorage.removeItem("aoe2_active_job");
+      } catch (e) {}
+      try {
+        await api(`/api/jobs/${job.job_id}/cancel?token=${job.token}`, {});
+      } catch (e) {}
+      currentJob = null;
+      $("jobBox").innerHTML = `
+        <div class="callout-box" style="border-left:3px solid var(--gold);padding:1rem;background:rgba(212,175,55,0.08);">
+          <p style="margin:0;font-size:0.95rem;color:var(--text);">
+            Review job cancelled. You can configure and start a new review anytime.
+          </p>
+        </div>`;
+      setTimeout(() => switchTab("launch"), 1000);
+    };
+  }
 }
 
 function restoreActiveJob() {

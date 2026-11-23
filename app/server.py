@@ -530,6 +530,12 @@ python3 "$HELPER" --job "{jid}" --token "{job['token']}" --server "{server_url}"
                                    "note": "Helper must be installed once (double-click installer). "
                                            "After that, the Launch button opens it automatically; "
                                            "the website never reads a local file uninvited."})
+        if path.startswith("/api/jobs/") and path.endswith("/cancel"):
+            jid = path.split("/")[3]
+            c = db()
+            c.execute("UPDATE jobs SET status='cancelled' WHERE id=?", (jid,))
+            c.commit(); c.close()
+            return self.send_json({"ok": True, "status": "cancelled"})
         if path.startswith("/api/jobs/") and path.endswith("/heartbeat"):
             # Best-effort progress reports from the helper. Auth is the
             # job token (same as upload/parser). A failed heartbeat
