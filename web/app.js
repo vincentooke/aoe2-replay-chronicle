@@ -55,6 +55,7 @@ async function api(path, body) {
   try {
     const r = await fetch(path, {
       method: body ? "POST" : "GET",
+      credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
       body: body ? JSON.stringify(body) : undefined
     });
