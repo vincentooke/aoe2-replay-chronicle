@@ -3,20 +3,22 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="color-scheme" content="light dark">
+  <meta name="color-scheme" content="dark">
   <link rel="icon" href="data:,">
   <title>Replay Chronicle · Age of Empires II Replay Coaching</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Alegreya:ital,wght@0,400;0,700;1,400&family=Alegreya+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Alegreya:ital,wght@0,400;0,700;1,400&family=Alegreya+Sans:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css?v=20261123">
 </head>
 <body>
 
 <header class="topbar">
   <div class="topbar-in">
     <div class="brand">
-      <span class="brand-icon">⚔</span>
+      <span class="brand-icon" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--gold)"><path d="M14.5 17.5 3 6V3h3l11.5 11.5M10 10l4.5 4.5M14 14l-1 5 7-7-5-1"/></svg>
+      </span>
       <div>
         Replay Chronicle
         <small>Age of Empires II · Automated Replay Coaching</small>
@@ -26,8 +28,10 @@
       <button type="button" id="navNewReview" class="active">Review Replay</button>
       <button type="button" id="navLiveJob">Live Progress</button>
       <button type="button" id="navSavedReviews">Coaching Archives</button>
-      <button type="button" id="navProTier" class="pro-nav-btn">⚜ Pro Tier <span class="badge-soon">Soon</span></button>
-      <button type="button" id="navLoginBtn" class="login-nav-btn">⚜ Sign In</button>
+      <button type="button" id="navProTier" class="pro-nav-btn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="opacity:0.9;vertical-align:middle;margin-right:4px"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>Pro Tier <span class="badge-soon">Soon</span>
+      </button>
+      <button type="button" id="navLoginBtn" class="login-nav-btn">Sign In</button>
       <span id="userBadge" class="user-badge" style="display:none;">
         <span id="userEmail"></span>
         <button type="button" id="logoutBtn" class="logout-btn">Log out</button>
@@ -41,11 +45,9 @@
   <!-- ============ TAB 1: REVIEW REPLAY (ACCESSIBLE TO ALL) ============ -->
   <div id="viewReview" class="tab-view">
 
-    <!-- HERO INTRO -->
     <section class="hero">
-      <div class="ornament" aria-hidden="true"><span class="rule"></span><span class="diamond"></span><span class="rule"></span></div>
-      <h1>Your Replay, Watched<br>&amp; Coached for You</h1>
-      <p class="lede">Our camera director watches your actual match footage, tracks your economy and frontline battles, and produces a phase-by-phase tactical coaching report with voice analysis and fight video clips.</p>
+      <h1>Your Replay, <em>Watched</em><br>& Coached for You</h1>
+      <p class="lede">The camera director watches your actual match footage, tracks your economy and frontline battles, and produces a phase-by-phase tactical coaching report with voice analysis and fight video clips.</p>
     </section>
 
     <!-- PREVIEW CAROUSEL: HOW IT WORKS -->
@@ -55,7 +57,7 @@
           <span class="step-badge">Showcase</span>
           <h2>How It Works: Camera Director in Action</h2>
         </div>
-        <button type="button" id="viewSampleHeroBtn" class="btn small gold-btn">Explore Sample Review ⚔</button>
+        <button type="button" id="viewSampleHeroBtn" class="btn small gold-btn">Explore Sample Review</button>
       </div>
       <p class="section-lead">Automated frame-by-frame match tracking watching your frontline battles and home town centers.</p>
 
@@ -64,7 +66,9 @@
           <div class="carousel-slide active" data-index="0">
             <div class="slide-visual">
               <span class="slide-badge">Frontline</span>
-              <div class="slide-icon-box">⚔</div>
+              <div class="slide-icon-box">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.5 17.5 3 6V3h3l11.5 11.5M10 10l4.5 4.5M14 14l-1 5 7-7-5-1"/></svg>
+              </div>
             </div>
             <div class="slide-content">
               <h3>1. Frontline Battle Prioritization</h3>
@@ -74,7 +78,9 @@
           <div class="carousel-slide" data-index="1">
             <div class="slide-visual">
               <span class="slide-badge">Eco Audit</span>
-              <div class="slide-icon-box">🏛</div>
+              <div class="slide-icon-box">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              </div>
             </div>
             <div class="slide-content">
               <h3>2. Town Center &amp; Macro Auditing</h3>
@@ -84,7 +90,9 @@
           <div class="carousel-slide" data-index="2">
             <div class="slide-visual">
               <span class="slide-badge">Voice Coach</span>
-              <div class="slide-icon-box">🎙</div>
+              <div class="slide-icon-box">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>
+              </div>
             </div>
             <div class="slide-content">
               <h3>3. Spoken Tactical Walkthrough</h3>
@@ -94,7 +102,9 @@
           <div class="carousel-slide" data-index="3">
             <div class="slide-visual">
               <span class="slide-badge">1.0x Micro</span>
-              <div class="slide-icon-box">🎬</div>
+              <div class="slide-icon-box">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m15 10-4 4L9 8l-5 8h20l-9-6z"/><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/></svg>
+              </div>
             </div>
             <div class="slide-content">
               <h3>4. Normal-Speed Battle Clips</h3>
@@ -129,7 +139,8 @@
       <div class="helper-box">
         <div class="helper-actions">
           <a id="downloadHelperBtn" href="/api/helper/download/geforce" class="btn big gold-glow" download="AoE2ReviewHelper.zip">
-            <span>⬇ Download Helper for macOS</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Download Helper for macOS</span>
             <small>Includes 1-Click App &amp; Launcher (.zip)</small>
           </a>
           <div class="helper-sublinks">
@@ -141,7 +152,9 @@
         <!-- Side-by-Side macOS Visual Setup Guide (No Popups) -->
         <div class="mac-security-guide">
           <div class="guide-header">
-            <span class="guide-icon">🛡️</span>
+            <span class="guide-icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </span>
             <div>
               <h4>Mac First-Time Open Guide (Happens only once)</h4>
               <p>Because this companion app is downloaded directly from our site, macOS shows a one-time safety check.</p>
@@ -153,8 +166,12 @@
               <div class="card-step-tag">1. What you will see</div>
               <div class="mac-dialog-mockup">
                 <div class="dialog-icon-box">
-                  <div class="dialog-icon">🔒</div>
-                  <div class="dialog-warn-badge">⚠️</div>
+                  <div class="dialog-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </div>
+                  <div class="dialog-warn-badge">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4m0 4h.01"/></svg>
+                  </div>
                 </div>
                 <div class="dialog-content">
                   <div class="dialog-title">&ldquo;AoE2ReviewHelper&rdquo; Not Opened</div>
@@ -259,8 +276,8 @@
         <div>
           <label for="coachMode">Coaching Voice &amp; Analysis</label>
           <select id="coachMode">
-            <option value="builtin" selected>⚡ Fast Built-in Tactical Voice (Default, Free &amp; Instant)</option>
-            <option value="gemini">🧠 Deep Gemini Grandmaster Analysis (Optional, uses your free Gemini API key)</option>
+            <option value="builtin" selected>Fast Built-in Tactical Voice (Default, Free &amp; Instant)</option>
+            <option value="gemini">Deep Gemini Grandmaster Analysis (Optional, uses your free Gemini API key)</option>
           </select>
         </div>
         <div style="display:none;">
@@ -277,7 +294,7 @@
 
         <!-- PLAIN-ENGLISH GOOGLE AI STUDIO GUIDE -->
         <div class="api-help-box" style="margin-top:0.9rem;padding:0.9rem;background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.25);border-radius:6px;">
-          <div style="font-weight:700;color:var(--gold);font-size:0.92rem;margin-bottom:0.4rem;">❓ How to get a free Google Gemini key (takes 30 seconds):</div>
+          <div style="font-weight:700;color:var(--gold);font-size:0.92rem;margin-bottom:0.4rem;">How to get a free Google Gemini key (takes 30 seconds):</div>
           <ol style="margin:0.2rem 0 0 1.2rem;padding:0;font-size:0.88rem;color:var(--text);line-height:1.5;">
             <li>Open <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:underline;">aistudio.google.com/apikey</a> in your browser (sign in with your Google account).</li>
             <li>Click the blue <strong>Create API key</strong> button.</li>
@@ -298,7 +315,10 @@
 
       <!-- Launch Action -->
       <div class="row-btns justify-center" style="margin-top:1.5rem;">
-        <button type="button" id="startBtn" class="btn huge gold-btn">⚔ Start Replay Review</button>
+        <button type="button" id="startBtn" class="btn huge gold-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 17.5 3 6V3h3l11.5 11.5M10 10l4.5 4.5M14 14l-1 5 7-7-5-1"/></svg>
+          Start Replay Review
+        </button>
       </div>
     </section>
 
@@ -325,7 +345,7 @@
     <!-- FEATURED SAMPLE SHOWCASE BANNER -->
     <div class="sample-review-banner" id="sampleReviewCard">
       <div class="sample-badge-bar">
-        <span class="tag ready">⭐ Featured Community Showcase</span>
+        <span class="tag ready">Featured Showcase</span>
         <span class="sample-meta">Match Duration: 40:20 · 3v3 Arabia</span>
       </div>
       <div class="sample-main-content">
@@ -333,21 +353,21 @@
           <h3 style="margin:0 0 0.3rem;color:var(--gold);">3v3 Arabia: Flank Archers &amp; Pocket Knights</h3>
           <p style="margin:0;font-size:0.92rem;color:var(--text-muted);">Explore a full-length finished coaching review with playable voice breakdown, 40-minute phase analysis, and practice drills.</p>
         </div>
-        <button type="button" id="loadSampleReviewBtn" class="btn gold-btn">Read Sample Review ⚔</button>
+        <button type="button" id="loadSampleReviewBtn" class="btn gold-btn">Read Sample Review</button>
       </div>
     </div>
 
     <!-- ARCHIVE SUBTABS -->
     <div class="subtabs-bar">
-      <button type="button" id="archiveTabReviews" class="subtab-btn active">⚔ Matches &amp; Reviews</button>
-      <button type="button" id="archiveTabHabits" class="subtab-btn">📈 Habits &amp; Trends</button>
+      <button type="button" id="archiveTabReviews" class="subtab-btn active">Matches &amp; Reviews</button>
+      <button type="button" id="archiveTabHabits" class="subtab-btn">Habits &amp; Trends</button>
     </div>
 
     <!-- SUBVIEW 1: MATCH REVIEWS -->
     <div id="reviewsSubView">
       <div id="archivePrompt" class="note text-center" style="margin:1rem auto 1.5rem;max-width:400px;display:none;">
         <p style="margin-bottom:0.75rem;">Sign in to view your personal saved match reviews and track your coaching progress.</p>
-        <button type="button" class="btn gold-btn" id="archiveSignInBtn">⚜ Sign In</button>
+        <button type="button" class="btn gold-btn" id="archiveSignInBtn">Sign In</button>
       </div>
       <ul id="reviewList"></ul>
       <div id="reviewDetail"></div>
@@ -409,7 +429,7 @@
 
       <!-- Interactive Drills Checklist -->
       <div class="card" style="background:rgba(0,0,0,0.4);border-color:var(--gold-dark);padding:1.4rem;">
-        <h3 style="margin-top:0;">⚔ Active Practice Drills Checklist</h3>
+        <h3 style="margin-top:0;">Active Practice Drills Checklist</h3>
         <p class="note">Check off drills as you complete them in single-player or ranked practice. Progress saves automatically.</p>
         <div class="drills-checklist" id="drillsChecklist">
           <label class="custom-checkbox drill-item">
@@ -443,7 +463,7 @@
       <div class="card-header-row">
         <div class="header-title-group">
           <span class="step-badge">Preview</span>
-          <h2>⚜ Replay Chronicle PRO <span class="badge-rec">Coming Soon</span></h2>
+          <h2>Replay Chronicle PRO <span class="badge-rec">Coming Soon</span></h2>
         </div>
         <span class="tag gold">Roadmap</span>
       </div>
@@ -498,7 +518,7 @@
           <input type="email" id="proEmail" placeholder="Enter your email address" required style="flex:1;min-width:240px;padding:0.75rem 1rem;border-radius:6px;border:1px solid var(--line-strong);background:var(--panel-2);color:#fff;">
           <button type="submit" class="btn gold-btn">Join Waitlist</button>
         </form>
-        <div id="proWaitlistMsg" style="display:none;margin-top:0.75rem;font-weight:600;color:var(--gold);">⚔ You are on the waitlist! We will notify you when Pro opens.</div>
+        <div id="proWaitlistMsg" style="display:none;margin-top:0.75rem;font-weight:600;color:var(--gold);">You are on the waitlist! We will notify you when Pro opens.</div>
       </div>
     </section>
   </div>
@@ -509,7 +529,9 @@
 <div id="authModal" class="modal-backdrop" hidden>
   <div class="modal-card">
     <button type="button" id="closeAuthModalBtn" class="modal-close-btn" aria-label="Close">✕</button>
-    <div class="shield gold" style="margin:0 auto 0.8rem;display:flex;justify-content:center;">⚜</div>
+    <div class="shield gold" style="margin:0 auto 0.8rem;display:flex;justify-content:center;">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--gold)"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </div>
     <h2 style="justify-content:center;margin-bottom:0.3rem;">Player Sign In</h2>
     <p id="authSubtitle" class="section-lead text-center" style="font-size:0.9rem;margin-bottom:1.2rem;">Sign in or create an account to start your review and save your coaching reports.</p>
     <div class="auth-box">
@@ -532,6 +554,6 @@
   <p class="footer-note">Dedicated to players looking to sharpen their build orders, military timing, and tactical execution. Replays analyzed strictly with user consent.</p>
 </footer>
 
-<script src="/app.js"></script>
+<script src="/app.js?v=20261123"></script>
 </body>
 </html>

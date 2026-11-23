@@ -315,7 +315,7 @@ $("startBtn").onclick = async () => {
 
   const { status, data } = await api("/api/jobs", payload);
   $("startBtn").disabled = false;
-  $("startBtn").textContent = "⚔ Start Replay Review";
+  $("startBtn").textContent = "Start Replay Review";
 
   if (status !== 200) {
     $("jobBox").innerHTML = `
@@ -359,7 +359,7 @@ function renderActiveJobBox(job) {
       <p class="note" style="margin-top:0.3rem;">Platform: <strong>${esc(job.platform)}</strong> · Focus Player: <strong>${esc($("ign").value || "Player")}</strong></p>
 
       <div class="row-btns">
-        <a class="btn big gold-btn" href="${esc(job.launch_url)}">⚔ Launch Camera Director</a>
+        <a class="btn big gold-btn" href="${esc(job.launch_url)}">Launch Camera Director</a>
         <a class="btn ghost" href="/api/helper/download/${esc(job.platform)}" download="AoE2ReviewHelper.zip">⬇ Download Helper (.zip)</a>
         <button type="button" class="btn ghost danger-hover" id="cancelJobBtn" style="color:#e06c75;border-color:rgba(224,108,117,0.4);">✕ Cancel Review</button>
       </div>
@@ -584,7 +584,7 @@ async function loadReviews() {
   list.innerHTML = reviews.map((r) => `
     <li class="review-item" data-id="${esc(r.id)}">
       <div class="r-main">
-        <div class="r-title">⚔ ${esc(r.title)}</div>
+        <div class="r-title">${esc(r.title)}</div>
         <div class="r-sub">Reviewed on ${esc(r.created_at)} · Job: ${esc(r.job_id || r.id)}</div>
       </div>
       <button type="button" class="btn" style="padding:0.45rem 0.9rem;font-size:0.9rem;">Read Coaching Report</button>
@@ -700,7 +700,7 @@ function renderReview(v) {
         ${clips.map((c) => `
           <figure class="clip-card">
             <div class="clip-badge-bar">
-              <span>⚔ Normal Speed (1.0x)</span>
+              <span>Normal Speed (1.0x)</span>
               <span>${c.duration_s || 15}s</span>
             </div>
             <video controls preload="metadata" src="/api/clips/${esc(c.file)}"></video>
@@ -738,7 +738,7 @@ function renderReview(v) {
       <div class="review-header-top">
         <h3 class="review-title">${esc(v.title || "Game Review")}</h3>
         <div style="display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap;">
-          <a class="btn gold-btn small" href="${chronicleUrl}" target="_blank">📜 Export Match Chronicle</a>
+          <a class="btn gold-btn small" href="${chronicleUrl}" target="_blank">Export Match Chronicle</a>
           <span class="tag ${isDraft ? 'draft' : 'ready'}">${isDraft ? 'Draft Review' : 'Full Video Review'}</span>
         </div>
       </div>
@@ -796,7 +796,7 @@ function renderReview(v) {
           <strong>Help the Coach Learn:</strong> Did these tactical tips and drills help reinforce habits for your next game?
         </div>
         <div class="row">
-          <button type="button" class="btn green" onclick="window.feedback('${esc(v.id)}', 'drill-helped')">⚔ Drill Helped</button>
+          <button type="button" class="btn green" onclick="window.feedback('${esc(v.id)}', 'drill-helped')">Drill Helped</button>
           <button type="button" class="btn ghost" onclick="window.feedback('${esc(v.id)}', 'report-was-wrong')">🛡 Report Was Inaccurate</button>
         </div>
       </div>
