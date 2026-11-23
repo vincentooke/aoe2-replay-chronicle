@@ -174,7 +174,7 @@ function updatePlatform(plat) {
       span.textContent = plat === "windows" ? "⬇ Download Helper for Windows" : "⬇ Download Helper for macOS";
     }
     if (small) {
-      small.textContent = plat === "geforce" ? "GeForce NOW & Native Mac" : (plat === "mac" ? "Steam on Mac" : "Steam on Windows");
+      small.textContent = plat === "geforce" ? "GeForce NOW on Mac" : (plat === "mac" ? "Steam on Mac" : "Steam on Windows");
     }
   }
 
