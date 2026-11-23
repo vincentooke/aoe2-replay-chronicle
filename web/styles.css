@@ -1503,3 +1503,74 @@ footer {
   margin: 0.4rem auto 0;
   font-size: 0.84rem;
 }
+
+/* ============ Modal Dialog & Nav Sign In ============ */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal-backdrop[hidden] {
+  display: none !important;
+}
+
+.modal-card {
+  position: relative;
+  background: #1a1612;
+  border: 1px solid var(--gold-dark, #8b6e3b);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.85), 0 0 25px rgba(212, 175, 55, 0.2);
+  border-radius: 8px;
+  max-width: 440px;
+  width: 100%;
+  padding: 2.2rem 1.8rem 1.8rem;
+  color: var(--text, #f0e6d2);
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 0.8rem;
+  right: 0.9rem;
+  background: none;
+  border: none;
+  color: var(--gold, #d4af37);
+  font-size: 1.3rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+.modal-close-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.login-nav-btn {
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid var(--gold, #d4af37);
+  color: var(--gold, #d4af37);
+  border-radius: 4px;
+  padding: 0.35rem 0.85rem;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: 0.5rem;
+}
+.login-nav-btn:hover {
+  background: var(--gold, #d4af37);
+  color: #12100e;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.35);
+}
+
+.tab-view[hidden] {
+  display: none !important;
+}
+

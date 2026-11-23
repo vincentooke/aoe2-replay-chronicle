@@ -69,24 +69,51 @@ async function api(path, body) {
 // Authentication & User State
 // ==========================================================================
 
+function openAuthModal(msg) {
+  const modal = $("authModal");
+  if (!modal) return;
+  modal.hidden = false;
+  $("authMsg").textContent = msg || "";
+  $("authMsg").className = "note text-center auth-status";
+}
+
+function closeAuthModal() {
+  const modal = $("authModal");
+  if (!modal) return;
+  modal.hidden = true;
+}
+
+$("navLoginBtn").onclick = () => openAuthModal();
+$("closeAuthModalBtn").onclick = () => closeAuthModal();
+const archiveSignInBtn = $("archiveSignInBtn");
+if (archiveSignInBtn) archiveSignInBtn.onclick = () => openAuthModal();
+
+// Close modal when clicking on backdrop outside card
+$("authModal").onclick = (e) => {
+  if (e.target === $("authModal")) closeAuthModal();
+};
+
 async function refreshMe() {
   const { data } = await api("/api/me");
   me = data.user;
   const loggedIn = !!me;
 
-  $("auth").hidden = loggedIn;
-  $("reviewFlow").hidden = !loggedIn;
-  $("saved").hidden = !loggedIn;
-
+  const navLoginBtn = $("navLoginBtn");
   const userBadge = $("userBadge");
+  const archivePrompt = $("archivePrompt");
+
+  if (navLoginBtn) navLoginBtn.style.display = loggedIn ? "none" : "inline-block";
   if (userBadge) {
     userBadge.style.display = loggedIn ? "inline-flex" : "none";
     $("userEmail").textContent = me || "";
   }
+  if (archivePrompt) {
+    archivePrompt.style.display = loggedIn ? "none" : "block";
+  }
 
   if (loggedIn) {
+    closeAuthModal();
     loadReviews();
-    // Check if there was an active job stored in session
     restoreActiveJob();
   }
 }
@@ -133,27 +160,32 @@ if (logoutBtn) {
   };
 }
 
-// Navigation Tabs
-$("navNewReview").onclick = () => {
-  $("navNewReview").classList.add("active");
-  $("navLiveJob").classList.remove("active");
-  $("navSavedReviews").classList.remove("active");
-  $("reviewFlow").scrollIntoView({ behavior: "smooth" });
-};
+// Navigation Tabs Switching
+function switchTab(tab) {
+  const tabs = {
+    review: { btn: $("navNewReview"), view: $("viewReview") },
+    live: { btn: $("navLiveJob"), view: $("viewLive") },
+    archives: { btn: $("navSavedReviews"), view: $("saved") }
+  };
+  for (const [key, t] of Object.entries(tabs)) {
+    if (!t.btn || !t.view) continue;
+    if (key === tab) {
+      t.btn.classList.add("active");
+      t.view.hidden = false;
+    } else {
+      t.btn.classList.remove("active");
+      t.view.hidden = true;
+    }
+  }
+  if (tab === "archives" && me) {
+    loadReviews();
+  }
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
 
-$("navLiveJob").onclick = () => {
-  $("navLiveJob").classList.add("active");
-  $("navNewReview").classList.remove("active");
-  $("navSavedReviews").classList.remove("active");
-  $("jobBox").scrollIntoView({ behavior: "smooth" });
-};
-
-$("navSavedReviews").onclick = () => {
-  $("navSavedReviews").classList.add("active");
-  $("navNewReview").classList.remove("active");
-  $("navLiveJob").classList.remove("active");
-  $("saved").scrollIntoView({ behavior: "smooth" });
-};
+$("navNewReview").onclick = () => switchTab("review");
+$("navLiveJob").onclick = () => switchTab("live");
+$("navSavedReviews").onclick = () => switchTab("archives");
 
 // ==========================================================================
 // Platform Selection
@@ -197,6 +229,10 @@ updatePlatform(platform);
 // ==========================================================================
 
 $("startBtn").onclick = async () => {
+  if (!me) {
+    openAuthModal("Please sign in or create an account to start your review.");
+    return;
+  }
   if (!platform) return;
   const optInChecked = $("optin").checked;
   if (!optInChecked) {
@@ -238,6 +274,7 @@ $("startBtn").onclick = async () => {
     sessionStorage.setItem("aoe2_active_job", JSON.stringify(currentJob));
   } catch (e) {}
 
+  switchTab("live");
   renderActiveJobBox(currentJob);
   startPolling(currentJob.job_id, currentJob.token);
 
@@ -438,7 +475,12 @@ function updateJobProgressUI(data) {
 // ==========================================================================
 
 async function loadReviews() {
-  const { data } = await api("/api/reviews");
+  if (!me) {
+    const list = $("reviewList");
+    if (list) list.innerHTML = "";
+    return;
+  }
+  const { status, data } = await api("/api/reviews");
   const reviews = data.reviews || [];
   const list = $("reviewList");
   if (!list) return;

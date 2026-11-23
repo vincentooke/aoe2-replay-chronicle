@@ -26,6 +26,7 @@
       <button type="button" id="navNewReview" class="active">Review Replay</button>
       <button type="button" id="navLiveJob">Live Progress</button>
       <button type="button" id="navSavedReviews">Coaching Archives</button>
+      <button type="button" id="navLoginBtn" class="login-nav-btn">⚜ Sign In</button>
       <span id="userBadge" class="user-badge" style="display:none;">
         <span id="userEmail"></span>
         <button type="button" id="logoutBtn" class="logout-btn">Log out</button>
@@ -36,33 +37,15 @@
 
 <main class="wrap">
 
-  <!-- ============ HERO INTRO ============ -->
-  <section class="hero">
-    <div class="ornament" aria-hidden="true"><span class="rule"></span><span class="diamond"></span><span class="rule"></span></div>
-    <h1>Your Replay, Watched<br>&amp; Coached for You</h1>
-    <p class="lede">Our camera director watches your actual match footage, tracks your economy and frontline battles, and produces a phase-by-phase tactical coaching report with voice analysis and fight video clips.</p>
-  </section>
+  <!-- ============ TAB 1: REVIEW REPLAY (ACCESSIBLE TO ALL) ============ -->
+  <div id="viewReview" class="tab-view">
 
-  <!-- ============ AUTHENTICATION ============ -->
-  <section id="auth" class="card">
-    <div class="shield gold">⚜</div>
-    <h2 style="justify-content:center;">Player Sign In</h2>
-    <p class="section-lead text-center">Save your coaching reports, track your habits across games, and view custom drills.</p>
-    <div class="auth-box">
-      <label for="email">Account Email</label>
-      <input id="email" type="email" placeholder="player@example.com" autocomplete="email">
-      <label for="password">Passphrase <span class="hint">(8+ characters)</span></label>
-      <input id="password" type="password" placeholder="Your secret passphrase" autocomplete="current-password">
-      <div class="row-btns justify-center">
-        <button type="button" id="loginBtn" class="btn">Log In</button>
-        <button type="button" id="registerBtn" class="btn ghost">Create Account</button>
-      </div>
-      <p id="authMsg" class="note text-center auth-status"></p>
-    </div>
-  </section>
-
-  <!-- ============ REVIEW CREATION WORKFLOW ============ -->
-  <div id="reviewFlow" hidden>
+    <!-- HERO INTRO -->
+    <section class="hero">
+      <div class="ornament" aria-hidden="true"><span class="rule"></span><span class="diamond"></span><span class="rule"></span></div>
+      <h1>Your Replay, Watched<br>&amp; Coached for You</h1>
+      <p class="lede">Our camera director watches your actual match footage, tracks your economy and frontline battles, and produces a phase-by-phase tactical coaching report with voice analysis and fight video clips.</p>
+    </section>
 
     <!-- STEP 1: HELPER SETUP (FIRST AND FOREMOST) -->
     <section id="helperCard" class="card highlight-card">
@@ -173,23 +156,57 @@
       <div class="row-btns justify-center" style="margin-top:1.5rem;">
         <button type="button" id="startBtn" class="btn huge gold-btn">⚔ Start Replay Review</button>
       </div>
-
-      <!-- Live Job Status & Progress -->
-      <div id="jobBox"></div>
     </section>
 
   </div>
 
-  <!-- ============ SAVED REVIEWS ARCHIVE ============ -->
-  <section id="saved" class="card" hidden>
+  <!-- ============ TAB 2: LIVE PROGRESS ============ -->
+  <div id="viewLive" class="tab-view" hidden>
+    <section class="card">
+      <div class="ornament" aria-hidden="true"><span class="rule"></span><span class="diamond"></span><span class="rule"></span></div>
+      <h2>Live Replay Progress</h2>
+      <p class="section-lead">Real-time status reported by the camera director while watching and recording your match.</p>
+      <div id="jobBox">
+        <p class="note" style="text-align:center;padding:2.5rem 1rem;">No active review in progress. Start a replay review from the <strong>Review Replay</strong> tab to track live progress here.</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ TAB 3: SAVED REVIEWS ARCHIVE ============ -->
+  <section id="saved" class="card tab-view" hidden>
     <div class="ornament" aria-hidden="true"><span class="rule"></span><span class="diamond"></span><span class="rule"></span></div>
     <h2>Coaching Archives &amp; Replay Reports</h2>
     <p class="section-lead">Every reviewed game is saved here with phase-by-phase tactical breakdowns, spoken audio walkthroughs, and video clips.</p>
+    <div id="archivePrompt" class="note text-center" style="margin:1rem auto 1.5rem;max-width:400px;display:none;">
+      <p style="margin-bottom:0.75rem;">Sign in to view your saved match reviews and track your coaching progress.</p>
+      <button type="button" class="btn gold-btn" id="archiveSignInBtn">⚜ Sign In</button>
+    </div>
     <ul id="reviewList"></ul>
     <div id="reviewDetail"></div>
   </section>
 
 </main>
+
+<!-- ============ AUTHENTICATION MODAL ============ -->
+<div id="authModal" class="modal-backdrop" hidden>
+  <div class="modal-card">
+    <button type="button" id="closeAuthModalBtn" class="modal-close-btn" aria-label="Close">✕</button>
+    <div class="shield gold" style="margin:0 auto 0.8rem;display:flex;justify-content:center;">⚜</div>
+    <h2 style="justify-content:center;margin-bottom:0.3rem;">Player Sign In</h2>
+    <p id="authSubtitle" class="section-lead text-center" style="font-size:0.9rem;margin-bottom:1.2rem;">Sign in or create an account to start your review and save your coaching reports.</p>
+    <div class="auth-box">
+      <label for="email">Account Email</label>
+      <input id="email" type="email" placeholder="player@example.com" autocomplete="email">
+      <label for="password">Passphrase <span class="hint">(8+ characters)</span></label>
+      <input id="password" type="password" placeholder="Your secret passphrase" autocomplete="current-password">
+      <div class="row-btns justify-center" style="margin-top:1.2rem;">
+        <button type="button" id="loginBtn" class="btn">Log In</button>
+        <button type="button" id="registerBtn" class="btn ghost">Create Account</button>
+      </div>
+      <p id="authMsg" class="note text-center auth-status"></p>
+    </div>
+  </div>
+</div>
 
 <footer>
   <div class="ornament" aria-hidden="true"><span class="rule"></span><span class="diamond"></span><span class="rule"></span></div>
