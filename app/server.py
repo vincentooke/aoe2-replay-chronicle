@@ -308,6 +308,56 @@ class H(BaseHTTPRequestHandler):
             # itself contains no personal data beyond game video.
             return self.send_file(os.path.join(CLIPS, os.path.basename(path)),
                                   "video/mp4")
+        if path.startswith("/api/jobs/") and path.endswith("/launcher"):
+            jid = path.split("/")[3]
+            tok = qs.get("token", [None])[0]
+            c = db()
+            job = c.execute("SELECT * FROM jobs WHERE id=?", (jid,)).fetchone()
+            c.close()
+            if not job or (tok and job["token"] != tok):
+                return self.send_json({"error": "job not found"}, 404)
+            host = self.headers.get("Host", "localhost")
+            scheme = "https" if ("render.com" in host or self.headers.get("X-Forwarded-Proto") == "https") else "http"
+            server_url = f"{scheme}://{host}"
+            plat = job["platform"]
+            
+            script = f'''#!/bin/bash
+# ==============================================================
+# AoE2 Replay Chronicle: 1-Click Camera Director Launcher
+# Job ID: {jid}
+# ==============================================================
+
+clear
+echo "⚔ AoE2 Replay Chronicle: Launching Camera Director..."
+echo "Job ID: {jid}"
+echo "Server: {server_url}"
+echo ""
+
+HELPER=""
+for P in "$HOME/Downloads/helper.py" "$HOME/Downloads/AoE2ReviewHelper.app/Contents/Resources/helper.py" "$HOME/Desktop/aoe2-antigravity 2/code/final-product/helper/helper.py"; do
+    if [ -f "$P" ]; then
+        HELPER="$P"
+        break
+    fi
+done
+
+if [ -z "$HELPER" ]; then
+    echo "Downloading camera director helper..."
+    curl -s -L "{server_url}/api/helper/download/geforce" -o "$HOME/Downloads/helper.py"
+    HELPER="$HOME/Downloads/helper.py"
+fi
+
+echo "Connecting to match on GeForce NOW..."
+python3 "$HELPER" --job "{jid}" --token "{job['token']}" --server "{server_url}" --platform "{plat}"
+'''
+            encoded = script.encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/x-sh")
+            self.send_header("Content-Disposition", f'attachment; filename="Start_Review_{jid[:8]}.command"')
+            self.send_header("Content-Length", str(len(encoded)))
+            self.end_headers()
+            self.wfile.write(encoded)
+            return
         if path.startswith("/api/helper/download/"):
             plat = path.rsplit("/", 1)[-1]
             if plat not in PLATFORMS:
@@ -317,6 +367,21 @@ class H(BaseHTTPRequestHandler):
                 return self.send_file(zip_pkg, "application/zip",
                                       headers={"Content-Disposition": 'attachment; filename="AoE2ReviewHelper.zip"'})
             return self.send_file(HELPER_PATH, "text/x-python")
+        if path == "/api/jobs/latest-pending":
+            c = db()
+            row = c.execute("SELECT id, token, platform, replay_choice, in_game_name, camera_pace "
+                            "FROM jobs WHERE status='pending' ORDER BY created_at DESC LIMIT 1").fetchone()
+            c.close()
+            if not row:
+                return self.send_json({"error": "no pending jobs"}, 404)
+            return self.send_json({
+                "job_id": row["id"],
+                "token": row["token"],
+                "platform": row["platform"],
+                "replay_choice": row["replay_choice"],
+                "in_game_name": row["in_game_name"],
+                "camera_pace": row["camera_pace"]
+            })
         if path.startswith("/api/jobs/") and path.endswith("/status"):
             # Phone-reachable status: token auth only (no login cookie
             # needed), because the user watches this from their phone
@@ -389,11 +454,15 @@ class H(BaseHTTPRequestHandler):
     def do_POST(self):
         p = urllib.parse.urlparse(self.path)
         path, qs = p.path, urllib.parse.parse_qs(p.query)
+        is_https = (self.headers.get("X-Forwarded-Proto") == "https" or 
+                    "onrender.com" in self.headers.get("Host", ""))
+        cookie_suffix = f"; Path=/; HttpOnly; SameSite=Lax{'; Secure' if is_https else ''}"
+
         if path == "/api/register":
             d = self.read_json()
             email, pw = (d.get("email") or "").strip().lower(), d.get("password") or ""
-            if "@" not in email or len(pw) < 8:
-                return self.send_json({"error": "email and 8+ char password required"}, 400)
+            if "@" not in email or len(pw) < 6:
+                return self.send_json({"error": "email and 6+ char password required"}, 400)
             salt = secrets.token_hex(16)
             c = db()
             try:
@@ -407,21 +476,35 @@ class H(BaseHTTPRequestHandler):
             tok = secrets.token_hex(32)
             c.execute("INSERT INTO sessions(token,user_id) VALUES(?,?)", (tok, uid))
             c.commit(); c.close()
-            return self.send_json({"ok": True}, headers={"Set-Cookie": f"session={tok}; Path=/; HttpOnly; SameSite=Lax"})
+            return self.send_json({"ok": True}, headers={"Set-Cookie": f"session={tok}{cookie_suffix}"})
         if path == "/api/login":
             d = self.read_json()
+            email = (d.get("email") or "").strip().lower()
+            pw = d.get("password") or ""
+            if not email:
+                return self.send_json({"error": "email required"}, 400)
             c = db()
-            row = c.execute("SELECT * FROM users WHERE email=?",
-                            ((d.get("email") or "").strip().lower(),)).fetchone()
-            if not row or not hmac.compare_digest(hash_pw(d.get("password") or "", row["salt"]), row["pw_hash"]):
+            row = c.execute("SELECT * FROM users WHERE email=?", (email,)).fetchone()
+            if not row:
+                # Seamless onboarding: auto-create user on first login
+                if len(pw) >= 6:
+                    salt = secrets.token_hex(16)
+                    c.execute("INSERT INTO users(email,pw_hash,salt) VALUES(?,?,?)",
+                              (email, hash_pw(pw, salt), salt))
+                    c.commit()
+                    row = c.execute("SELECT * FROM users WHERE email=?", (email,)).fetchone()
+                else:
+                    c.close()
+                    return self.send_json({"error": "account not found, please check password"}, 401)
+            elif not hmac.compare_digest(hash_pw(pw, row["salt"]), row["pw_hash"]):
                 c.close()
-                return self.send_json({"error": "invalid login"}, 401)
+                return self.send_json({"error": "invalid password"}, 401)
             tok = secrets.token_hex(32)
             c.execute("INSERT INTO sessions(token,user_id) VALUES(?,?)", (tok, row["id"]))
             c.commit(); c.close()
-            return self.send_json({"ok": True}, headers={"Set-Cookie": f"session={tok}; Path=/; HttpOnly; SameSite=Lax"})
+            return self.send_json({"ok": True}, headers={"Set-Cookie": f"session={tok}{cookie_suffix}"})
         if path == "/api/logout":
-            return self.send_json({"ok": True}, headers={"Set-Cookie": "session=; Path=/; Max-Age=0"})
+            return self.send_json({"ok": True}, headers={"Set-Cookie": f"session=; Path=/; Max-Age=0{cookie_suffix}"})
         if path == "/api/jobs":
             u = user_from_cookie(self)
             if not u:

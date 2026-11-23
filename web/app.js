@@ -326,9 +326,16 @@ function renderActiveJobBox(job) {
 
       <div class="row-btns">
         <a class="btn big gold-btn" href="${esc(job.launch_url)}">⚔ Launch Camera Director</a>
-        <a class="btn ghost" href="/api/helper/download/${esc(job.platform)}" download="helper.py">⬇ Re-download Helper</a>
+        <a class="btn ghost" href="/api/helper/download/${esc(job.platform)}" download="AoE2ReviewHelper.zip">⬇ Download Helper (.zip)</a>
       </div>
-      <p class="note" style="margin-top:0.6rem;">If clicking <em>Launch Camera Director</em> does not prompt to open, ensure you have downloaded the helper in Step 1.</p>
+      <div class="callout-box" style="margin-top:1rem;background:rgba(212,175,55,0.08);border-left:3px solid var(--gold);padding:0.9rem;">
+        <p style="margin:0;font-size:0.92rem;line-height:1.5;">
+          <strong>Starting your match:</strong><br>
+          1. Make sure your replay is loaded and playing in <strong>GeForce NOW</strong>.<br>
+          2. Click <strong>Launch Camera Director</strong> above, or double-click <strong>Start_Review.command</strong> inside your downloaded helper folder.<br>
+          3. The camera director will automatically find this review job and begin recording!
+        </p>
+      </div>
 
       <!-- Live Progress Bar -->
       <div class="progress-shell">

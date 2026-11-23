@@ -4845,10 +4845,10 @@ def main():
             break
 
     ap = argparse.ArgumentParser()
-    ap.add_argument("--job", required=True)
-    ap.add_argument("--token", required=True)
-    ap.add_argument("--server", default="http://127.0.0.1:8000")
-    ap.add_argument("--platform", default="geforce", choices=["geforce", "windows", "mac"])
+    ap.add_argument("--job", default=None)
+    ap.add_argument("--token", default=None)
+    ap.add_argument("--server", default="https://aoe2-replay-chronicle.onrender.com")
+    ap.add_argument("--platform", default=None, choices=["geforce", "windows", "mac"])
     ap.add_argument("--dry-run", action="store_true",
                     help="Print the plan, check ffmpeg and the window gate, click nothing.")
     ap.add_argument("--duration-secs", type=int, default=3600,
@@ -4916,6 +4916,27 @@ def main():
                          "resolution), so the panel/clock OCR is "
                          "unaffected.")
     args = ap.parse_args()
+
+    if not args.job or not args.token:
+        print(f"Connecting to {args.server} to fetch active review job...")
+        import urllib.request, json, ssl
+        ctx = ssl._create_unverified_context()
+        try:
+            req = urllib.request.Request(f"{args.server}/api/jobs/latest-pending", headers={"Accept": "application/json"})
+            with urllib.request.urlopen(req, context=ctx, timeout=8) as resp:
+                data = json.loads(resp.read().decode('utf-8'))
+                args.job = data["job_id"]
+                args.token = data["token"]
+                if not args.platform:
+                    args.platform = data.get("platform", "geforce")
+                if "replay_choice" in data and not getattr(args, "replay_choice", None):
+                    args.replay_choice = data["replay_choice"]
+                if "camera_pace" in data and not getattr(args, "camera_pace", None):
+                    args.camera_pace = data["camera_pace"]
+                print(f"Connected! Found pending review job: {args.job} (Platform: {args.platform})")
+        except Exception as e:
+            print(f"No pending job found on {args.server}. Please create a review on the website first! ({e})")
+            return 1
     # Focus mapping is per-match input, validated up front so a
     # mistyped flag fails fast instead of silently running
     # unmapped. The parsed set rides on args for run_real_capture.
