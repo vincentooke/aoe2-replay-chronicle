@@ -1,8 +1,8 @@
 services:
   - type: web
-    name: replay-chronicle
-    runtime: python
-    buildCommand: ""
+    name: aoe2-replay-chronicle
+    env: python
+    buildCommand: "pip install -r requirements.txt"
     startCommand: "python3 app/server.py"
     envVars:
       - key: PYTHON_VERSION
