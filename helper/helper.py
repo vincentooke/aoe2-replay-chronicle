@@ -4690,7 +4690,8 @@ def run_real_capture(args, ffmpeg: str, device_idx: str | None = None) -> int:
     elif os.path.exists("helper_coords.json"):
         verified = load_verified_coords("helper_coords.json", screen_w, screen_h)
 
-    if not args.manual_load:
+    is_manual = args.manual_load or (args.platform == "geforce")
+    if not is_manual:
         ok, load_why = load_replay(driver, args.platform, (screen_w, screen_h),
                                    manual_load=False, verified_coords=verified)
         if not ok:
@@ -4933,6 +4934,8 @@ def main():
                     args.replay_choice = data["replay_choice"]
                 if "camera_pace" in data and not getattr(args, "camera_pace", None):
                     args.camera_pace = data["camera_pace"]
+                args.director = True
+                args.manual_load = True
                 print(f"Connected! Found pending review job: {args.job} (Platform: {args.platform})")
         except Exception as e:
             print(f"No pending job found on {args.server}. Please create a review on the website first! ({e})")
