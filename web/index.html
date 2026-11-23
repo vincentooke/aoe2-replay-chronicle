@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="data:,">
+  <title>Replay Chronicle · Age of Empires II Replay Coaching</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Alegreya:ital,wght@0,400;0,700;1,400&family=Alegreya+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <div class="brand">
+      <span class="brand-icon">⚔</span>
+      <div>
+        Replay Chronicle
+        <small>Age of Empires II · Automated Replay Coaching</small>
+      </div>
+    </div>
+    <nav class="main" aria-label="Main Navigation">
+      <button type="button" id="navNewReview" class="active">Review Replay</button>
+      <button type="button" id="navLiveJob">Live Progress</button>
+      <button type="button" id="navSavedReviews">Coaching Archives</button>
+      <span id="userBadge" class="user-badge" style="display:none;">
+        <span id="userEmail"></span>
+        <button type="button" id="logoutBtn" class="logout-btn">Log out</button>
+      </span>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ============ HERO INTRO ============ -->
+  <section class="hero">
+    <div class="ornament" aria-hidden="true"><span class="rule"></span><span class="diamond"></span><span class="rule"></span></div>
+    <h1>Your Replay, Watched<br>&amp; Coached for You</h1>
+    <p class="lede">Our camera director watches your actual match footage, tracks your economy and frontline battles, and produces a phase-by-phase tactical coaching report with voice analysis and fight video clips.</p>
+  </section>
+
+  <!-- ============ AUTHENTICATION ============ -->
+  <section id="auth" class="card">
+    <div class="shield gold">⚜</div>
+    <h2 style="justify-content:center;">Player Sign In</h2>
+    <p class="section-lead text-center">Save your coaching reports, track your habits across games, and view custom drills.</p>
+    <div class="auth-box">
+      <label for="email">Account Email</label>
+      <input id="email" type="email" placeholder="player@example.com" autocomplete="email">
+      <label for="password">Passphrase <span class="hint">(8+ characters)</span></label>
+      <input id="password" type="password" placeholder="Your secret passphrase" autocomplete="current-password">
+      <div class="row-btns justify-center">
+        <button type="button" id="loginBtn" class="btn">Log In</button>
+        <button type="button" id="registerBtn" class="btn ghost">Create Account</button>
+      </div>
+      <p id="authMsg" class="note text-center auth-status"></p>
+    </div>
+  </section>
+
+  <!-- ============ REVIEW CREATION WORKFLOW ============ -->
+  <div id="reviewFlow" hidden>
+
+    <!-- STEP 1: HELPER SETUP (FIRST AND FOREMOST) -->
+    <section id="helperCard" class="card highlight-card">
+      <div class="card-header-row">
+        <div class="header-title-group">
+          <span class="step-badge">Step 1: Setup</span>
+          <h2>Download Spectator Helper</h2>
+        </div>
+        <span class="tag ready" id="helperBadge">Install Once</span>
+      </div>
+      <p class="section-lead">The spectator helper connects your browser to Age of Empires II, controlling the camera and recording the match automatically with zero Terminal commands.</p>
+
+      <div class="helper-box">
+        <div class="helper-actions">
+          <a id="downloadHelperBtn" href="/api/helper/download/geforce" class="btn big gold-glow" download="helper.py">
+            <span>⬇ Download Helper for macOS</span>
+            <small>GeForce NOW &amp; Native Mac</small>
+          </a>
+          <div class="helper-sublinks">
+            <span class="muted-text">Other systems:</span>
+            <a href="/api/helper/download/windows" class="sublink" download="helper.py">Windows</a>
+            <span class="sep">•</span>
+            <a href="/api/helper/download/mac" class="sublink" download="helper.py">Steam Mac</a>
+          </div>
+        </div>
+
+        <div class="helper-instructions">
+          <div class="instruction-item">
+            <span class="inst-num">1</span>
+            <span>Download the helper file to your Downloads folder</span>
+          </div>
+          <div class="instruction-item">
+            <span class="inst-num">2</span>
+            <span>Keep it in Downloads (ready for one-click browser launch)</span>
+          </div>
+          <div class="instruction-item">
+            <span class="inst-num">3</span>
+            <span>Ready! You can now launch reviews below anytime</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 2: REVIEW CONFIGURATION & LAUNCH -->
+    <section id="launchCard" class="card">
+      <div class="ornament" aria-hidden="true"><span class="rule"></span><span class="diamond"></span><span class="rule"></span></div>
+      <div class="card-header-row">
+        <div class="header-title-group">
+          <span class="step-badge">Step 2: Launch</span>
+          <h2>Start Replay Review</h2>
+        </div>
+      </div>
+      <p class="section-lead">Select your platform and enter your in-game name. The camera director will automatically detect your team and focus the review on you.</p>
+
+      <!-- Platform Selection -->
+      <label class="section-label">Select How You Play</label>
+      <div class="platform-grid" id="platformBtns">
+        <button type="button" class="platform-btn sel" data-platform="geforce">
+          <span class="p-icon">🎮</span>
+          <span class="p-name">GeForce NOW <span class="badge-rec">Recommended</span></span>
+          <span class="p-desc">Played through GeForce NOW on Mac</span>
+        </button>
+        <button type="button" class="platform-btn" data-platform="mac">
+          <span class="p-icon">🍎</span>
+          <span class="p-name">Steam on Mac</span>
+          <span class="p-desc">AoE2 running directly via Steam</span>
+        </button>
+        <button type="button" class="platform-btn" data-platform="windows">
+          <span class="p-icon">🪟</span>
+          <span class="p-name">Steam on Windows</span>
+          <span class="p-desc">AoE2 running on Windows PC</span>
+        </button>
+      </div>
+
+      <!-- Quick Platform Steps Callout (Compact) -->
+      <div id="platformSteps" class="platform-callout"></div>
+
+      <!-- Review Configuration -->
+      <div class="config-grid">
+        <div>
+          <label for="ign">Your In-Game Name</label>
+          <input id="ign" type="text" placeholder="e.g. Ken Grabshaw, TheViper, Daut">
+          <span class="input-hint">Used by the camera director to identify your team on the scoreboard</span>
+        </div>
+        <div>
+          <label for="cameraPace">Camera Director Rhythm</label>
+          <select id="cameraPace">
+            <option value="dynamic" selected>Dynamic (Base checks and active battles)</option>
+            <option value="standard">Standard (Even rotation across bases and center)</option>
+            <option value="fights">Fight Focused (Prioritizes front lines)</option>
+          </select>
+        </div>
+        <div style="display:none;">
+          <select id="replayChoice">
+            <option value="newest" selected>Newest replay</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Opt-In Consent -->
+      <div class="optin-clean">
+        <label class="custom-checkbox">
+          <input type="checkbox" id="optin" checked>
+          <span class="checkbox-box"></span>
+          <span class="checkbox-text">Record only this single chosen replay with user consent</span>
+        </label>
+      </div>
+
+      <!-- Launch Action -->
+      <div class="row-btns justify-center" style="margin-top:1.5rem;">
+        <button type="button" id="startBtn" class="btn huge gold-btn">⚔ Start Replay Review</button>
+      </div>
+
+      <!-- Live Job Status & Progress -->
+      <div id="jobBox"></div>
+    </section>
+
+  </div>
+
+  <!-- ============ SAVED REVIEWS ARCHIVE ============ -->
+  <section id="saved" class="card" hidden>
+    <div class="ornament" aria-hidden="true"><span class="rule"></span><span class="diamond"></span><span class="rule"></span></div>
+    <h2>Coaching Archives &amp; Replay Reports</h2>
+    <p class="section-lead">Every reviewed game is saved here with phase-by-phase tactical breakdowns, spoken audio walkthroughs, and video clips.</p>
+    <ul id="reviewList"></ul>
+    <div id="reviewDetail"></div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="ornament" aria-hidden="true"><span class="rule"></span><span class="diamond"></span><span class="rule"></span></div>
+  <p><strong>Replay Chronicle</strong> · Built for the Age of Empires II Community.</p>
+  <p class="footer-note">Dedicated to players looking to sharpen their build orders, military timing, and tactical execution. Replays analyzed strictly with user consent.</p>
+</footer>
+
+<script src="/app.js"></script>
+</body>
+</html>

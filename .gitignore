@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.pyo
+uploads/*.mp4
+uploads/*.aoe2record
+clips/*.mp4
+audio/*.mp3
+data/*.db
+data/*.db-journal
+.DS_Store

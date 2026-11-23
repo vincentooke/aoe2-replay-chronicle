@@ -1,0 +1,14 @@
+Windows Registry Editor Version 5.00
+; Windows protocol registration template for aoe2review://
+; This file is DOCUMENTATION for the installer (Inno Setup script
+; aoe2review.iss writes these keys at install time). Do NOT merge
+; this .reg by hand as part of the product flow — the installer
+; does it, after the user double-clicks it once.
+; The helper path below is a placeholder the installer replaces
+; with the real install location; it is not a claim about any
+; user's machine.
+[HKEY_CLASSES_ROOT\aoe2review]
+@="URL:AoE2ReviewHelper Protocol"
+"URL Protocol"=""
+[HKEY_CLASSES_ROOT\aoe2review\shell\open\command]
+@="\"C:\\Program Files\\AoE2ReviewHelper\\aoe2review-helper.exe\" \"%1\""

@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: replay-chronicle
+    runtime: python
+    buildCommand: ""
+    startCommand: "python3 app/server.py"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0

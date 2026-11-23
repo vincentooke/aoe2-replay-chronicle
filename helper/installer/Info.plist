@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- macOS installer template for the AoE2ReviewHelper.app bundle.
+     The PyInstaller BUNDLE step (helper/aoe2review.spec) generates the
+     real Info.plist; this file documents the protocol registration
+     that MUST be present, so a reviewer can check it without a Mac.
+     aoe2review://job/<id>?token=<token> starts the helper with that
+     one opt-in job. No other scheme is registered.
+     Signing / notarisation: NOT included. An unsigned .app is for
+     testing only and is an open launch item (see BUILD_LOG). -->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleIdentifier</key>
+    <string>com.aoe2review.helper</string>
+    <key>CFBundleName</key>
+    <string>AoE2ReviewHelper</string>
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>aoe2review</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>aoe2review</string>
+            </array>
+        </dict>
+    </array>
+</dict>
+</plist>
