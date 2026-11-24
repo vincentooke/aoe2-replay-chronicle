@@ -4900,7 +4900,9 @@ def run_real_capture(args, ffmpeg: str, device_idx: str | None = None) -> int:
 
 
 def show_native_alert(title: str, message: str):
-    """Show a non-blocking Cocoa dialog on macOS so the user always sees what happened."""
+    """Show a non-blocking Cocoa dialog on macOS when launched from the .app bundle."""
+    if "AoE2ReviewHelper.app" not in os.path.abspath(__file__) and not os.environ.get("AOE2_FORCE_ALERT"):
+        return
     try:
         from AppKit import NSAlert, NSWarningAlertStyle, NSApplication
         NSApplication.sharedApplication()
@@ -5023,7 +5025,7 @@ def main():
                          "for both encoders. Opt-in: unset means the "
                          "encoder default — run 21 came out ~36 Mbps / "
                          "5.4 GB per 20 min; 12M is ~1.8 GB per 20 min.")
-    ap.add_argument("--capture-scale", default=None,
+    ap.add_argument("--capture-scale", default=("1440x900" if sys.platform == "darwin" else None),
                     help="Scale the captured video, e.g. 1440x900 (ffmpeg "
                          "scale filter). Opt-in experiment for the 11.33 "
                          "fps capture bottleneck in run 21: 4x fewer "
@@ -5217,6 +5219,7 @@ def upload_video(server: str, job_id: str, token: str, video_path: str,
         conn.putheader("Content-Type", "video/mp4")
         conn.putheader("Content-Length", str(size))
         conn.putheader("X-Playback-Speed", playback_speed)
+        conn.putheader("X-Async-Analyze", "1")
         if camera_events:
             try:
                 conn.putheader("X-Camera-Json",

@@ -254,11 +254,18 @@ def test_chunk_assembly_and_integrity(base_dir: str):
             got_hash = hashlib.sha256(f.read()).hexdigest()
         assert want_hash == got_hash, "Stored video bytes differ from upload"
 
-        # 5. Verify database updates
-        c = sqlite3.connect(server.DB)
-        row = c.execute("SELECT status FROM jobs WHERE id=?", (jid,)).fetchone()
-        rev_count = c.execute("SELECT COUNT(*) FROM reviews WHERE job_id=?", (jid,)).fetchone()[0]
-        c.close()
+        # 5. Verify database updates (async analysis finishes in background thread)
+        import time
+        row = None
+        rev_count = 0
+        for _ in range(300):
+            c = sqlite3.connect(server.DB)
+            row = c.execute("SELECT status FROM jobs WHERE id=?", (jid,)).fetchone()
+            rev_count = c.execute("SELECT COUNT(*) FROM reviews WHERE job_id=?", (jid,)).fetchone()[0]
+            c.close()
+            if row and row[0] in ("done", "failed") and rev_count == 1:
+                break
+            time.sleep(0.1)
 
         assert row[0] == "done", f"Job status must be 'done', got {row[0]}"
         assert rev_count == 1, f"Expected 1 review, got {rev_count}"

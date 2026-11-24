@@ -83,16 +83,20 @@ def sample_frame_motion(path: str, duration: float, every: float = 10.0):
     prev = None
     try:
         with tempfile.TemporaryDirectory() as td:
-            for i, ts in enumerate(times):
-                out = os.path.join(td, f"f{i}.png")
-                try:
-                    r = run([FFMPEG, "-y", "-v", "error", "-ss", str(ts), "-i", path,
-                             "-frames:v", "1", "-vf", "scale=160:-1,format=gray", out],
-                            timeout=60)
-                except FileNotFoundError:
-                    return []
-                if r.returncode != 0 or not os.path.exists(out):
-                    continue
+            fps_expr = f"1/{max(1, int(round(every)))}"
+            out_pat = os.path.join(td, "f_%05d.png")
+            try:
+                r = run([FFMPEG, "-y", "-v", "error", "-i", path,
+                         "-vf", f"fps={fps_expr},scale=160:-1,format=gray", out_pat],
+                        timeout=180)
+            except FileNotFoundError:
+                return []
+            if r.returncode != 0:
+                return []
+            files = sorted(f for f in os.listdir(td) if f.startswith("f_") and f.endswith(".png"))
+            for i, fname in enumerate(files):
+                out = os.path.join(td, fname)
+                ts = min(duration - 0.5, (i + 0.5) * every)
                 size = os.path.getsize(out)
                 motion = 0.0 if prev is None else abs(size - prev) / max(prev, 1)
                 results.append({"t": ts, "motion": motion, "size": size})
@@ -313,8 +317,9 @@ def make_clips(video_path: str, motion: list, duration: float,
             out = os.path.join(out_dir, f"{job_id}-clip-{len(clips) + 1}.mp4")
             try:
                 r = run([FFMPEG, "-y", "-v", "error", "-ss", str(start), "-i", video_path,
-                         "-t", "15", "-c:v", "libx264", "-pix_fmt", "yuv420p",
-                         "-c:a", "aac", out], timeout=180)
+                         "-t", "15", "-vf", "scale='min(1280,iw)':-2",
+                         "-c:v", "libx264", "-preset", "veryfast", "-threads", "2",
+                         "-pix_fmt", "yuv420p", "-c:a", "aac", out], timeout=180)
                 if r.returncode == 0 and os.path.exists(out) and os.path.getsize(out) > 0:
                     clips.append({"file": os.path.basename(out), "start_s": round(start),
                                   "duration_s": 15, "speed": "normal", "caption": caption})

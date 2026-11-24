@@ -647,8 +647,10 @@ python3 "$HELPER" --job "{jid}" --token "{job['token']}" --server "{server_url}"
                 c.close()
                 return self.send_json({"error": "video too small / empty"}, 400)
             playback = self.headers.get("X-Playback-Speed", "normal")
-            c.execute("UPDATE jobs SET status='done', playback_speed=? WHERE id=?",
-                      (playback, jid))
+            async_analyze = self.headers.get("X-Async-Analyze") == "1"
+            initial_status = "processing" if async_analyze else "done"
+            c.execute("UPDATE jobs SET status=?, playback_speed=? WHERE id=?",
+                      (initial_status, playback, jid))
             parser = None
             # Parser may arrive via the dedicated /parser endpoint (preferred:
             # a full summary is too large for a header) or, for small
@@ -674,30 +676,58 @@ python3 "$HELPER" --job "{jid}" --token "{job['token']}" --server "{server_url}"
                 except Exception:
                     camera_events = None
             c.commit()
+            c.close()
             jobd = dict(job); jobd["playback_speed"] = playback
-            review = analyze_video(vpath, jobd, parser, CLIPS, camera_events)
-            os.makedirs(AUDIO, exist_ok=True)
-            audio_filename = f"{jid}.mp3"
-            audio_path = os.path.join(AUDIO, audio_filename)
-            audio_script = generate_audio_report(review, audio_path, in_game_name=jobd.get("in_game_name", ""))
-            review.audio_file = audio_filename
-            review.audio_script = audio_script
-            body = {
-                "id": jid, "job_id": jid, "platform": jobd["platform"],
-                "replay_choice": jobd["replay_choice"],
-                "in_game_name": jobd["in_game_name"],
-                "duration_s": round(review.duration_s, 1),
-                "phases": review.phases, "tips": review.tips, "clips": review.clips,
-                "audio_file": review.audio_file,
-                "audio_script": review.audio_script,
-                "draft_only": review.draft_only, "draft_reasons": review.draft_reasons,
-                "camera": review.camera,
-                "parser": parser,
-                "title": f"Review: {jobd['platform']} replay ({jobd['replay_choice']})",
-            }
-            c.execute("INSERT INTO reviews(id,job_id,user_id,title,body_json) VALUES(?,?,?, ?,?)",
-                      (jid, jid, jobd["user_id"], body["title"], json.dumps(body)))
-            c.commit(); c.close()
+
+            def _run_analysis():
+                try:
+                    review = analyze_video(vpath, jobd, parser, CLIPS, camera_events)
+                    os.makedirs(AUDIO, exist_ok=True)
+                    audio_filename = f"{jid}.mp3"
+                    audio_path = os.path.join(AUDIO, audio_filename)
+                    audio_script = generate_audio_report(review, audio_path, in_game_name=jobd.get("in_game_name", ""))
+                    review.audio_file = audio_filename
+                    review.audio_script = audio_script
+                    body = {
+                        "id": jid, "job_id": jid, "platform": jobd["platform"],
+                        "replay_choice": jobd["replay_choice"],
+                        "in_game_name": jobd["in_game_name"],
+                        "duration_s": round(review.duration_s, 1),
+                        "phases": review.phases, "tips": review.tips, "clips": review.clips,
+                        "audio_file": review.audio_file,
+                        "audio_script": review.audio_script,
+                        "draft_only": review.draft_only, "draft_reasons": review.draft_reasons,
+                        "camera": review.camera,
+                        "parser": parser,
+                        "title": f"Review: {jobd['platform']} replay ({jobd['replay_choice']})",
+                    }
+                    bc = db()
+                    bc.execute("INSERT INTO reviews(id,job_id,user_id,title,body_json) VALUES(?,?,?, ?,?)",
+                               (jid, jid, jobd["user_id"], body["title"], json.dumps(body)))
+                    bc.execute("UPDATE jobs SET status='done' WHERE id=?", (jid,))
+                    bc.execute("INSERT INTO job_progress(job_id,stage,detail) VALUES(?,?,?)",
+                               (jid, "done", "Review ready"))
+                    bc.commit(); bc.close()
+                except Exception as exc:
+                    try:
+                        bc = db()
+                        bc.execute("UPDATE jobs SET status='failed' WHERE id=?", (jid,))
+                        bc.execute("INSERT INTO job_progress(job_id,stage,detail) VALUES(?,?,?)",
+                                   (jid, "analysis_failed", str(exc)[:300]))
+                        bc.commit(); bc.close()
+                    except Exception:
+                        pass
+
+            if async_analyze:
+                import threading
+                bc = db()
+                bc.execute("INSERT INTO job_progress(job_id,stage,detail) VALUES(?,?,?)",
+                           (jid, "analyzing", "Video received; analyzing gameplay and generating coaching report"))
+                bc.commit(); bc.close()
+                threading.Thread(target=_run_analysis, daemon=True).start()
+                return self.send_json({"ok": True, "review_id": jid, "status": "processing"})
+
+            _run_analysis()
             return self.send_json({"ok": True, "review_id": jid})
         if path.startswith("/api/reviews/") and path.endswith("/feedback"):
             u = user_from_cookie(self)
