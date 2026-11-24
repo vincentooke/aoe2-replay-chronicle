@@ -85,7 +85,7 @@ def title_allowed(title: str, platform: str) -> bool:
     """Pure check: is this window title the game (or GeForce) window?"""
     t = (title or "").lower()
     if platform == "geforce":
-        allowed = ("geforce now", "geforcenow", "nvidia geforce now", "nvcontainer", "nvidia")
+        allowed = ("geforce now", "geforcenow", "nvidia geforce now", "com.nvidia.gfnpc")
         return any(a in t for a in allowed)
     else:
         allowed = ("age of empires ii", "aoe2de", "aoe2")
@@ -142,7 +142,7 @@ def _macos_gate(platform: str):
         if app:
             name = app.localizedName() or ""
             bid = app.bundleIdentifier() or ""
-            if title_allowed(name, platform) or (platform == "geforce" and any(k in (name + bid).lower() for k in ("geforce", "nvidia"))):
+            if title_allowed(name, platform) or (platform == "geforce" and (bid == "com.nvidia.gfnpc.mall" or "geforce now" in name.lower())):
                 return True, f"frontmost={name} ({bid}) (native Cocoa verified)"
     except Exception:
         pass
@@ -233,44 +233,48 @@ def _macos_activate_game(platform: str):
     if sys.platform != "darwin":
         return False, "not macOS"
 
-    # 1. Native Cocoa activation
+    # 1. System open -a directly brings the application and its Space to front
+    if platform == "geforce":
+        for cand in ("/Applications/GeForceNOW.app", "GeForceNOW", "GeForce NOW", "NVIDIA GeForce NOW"):
+            try:
+                res = subprocess.run(["open", "-a", cand], capture_output=True, timeout=5)
+                if res.returncode == 0:
+                    time.sleep(2)
+                    break
+            except Exception:
+                pass
+    elif platform == "mac":
+        for cand in ("Age of Empires II: Definitive Edition", "Age of Empires II", "AoE2DE"):
+            try:
+                res = subprocess.run(["open", "-a", cand], capture_output=True, timeout=5)
+                if res.returncode == 0:
+                    time.sleep(2)
+                    break
+            except Exception:
+                pass
+
+    # 2. Native Cocoa activation for regular GUI apps only (activationPolicy == 0)
     try:
         from AppKit import NSWorkspace
         ws = NSWorkspace.sharedWorkspace()
         for app in ws.runningApplications():
+            # Crucial: ignore background accessory daemons (policy != 0, like GeForceNOWContainer)
+            if app.activationPolicy() != 0:
+                continue
             bid = app.bundleIdentifier() or ""
             name = app.localizedName() or ""
-            if platform == "geforce" and any(k in (bid + name).lower() for k in ("geforce", "nvidia", "nvcontainer")):
-                app.activateWithOptions_(1)
-                time.sleep(2)
-                return True, f"activated {name} (native Cocoa)"
+            if platform == "geforce" and (bid == "com.nvidia.gfnpc.mall" or any(k in name.lower() for k in ("geforce now", "geforcenow"))):
+                app.activateWithOptions_(3)  # NSApplicationActivateAllWindows | NSApplicationActivateIgnoringOtherApps
+                time.sleep(2.5)
+                return True, f"activated {name} ({bid}) (native Cocoa)"
             elif platform == "mac" and any(k in (bid + name).lower() for k in ("aoe", "empires")):
-                app.activateWithOptions_(1)
-                time.sleep(2)
-                return True, f"activated {name} (native Cocoa)"
+                app.activateWithOptions_(3)
+                time.sleep(2.5)
+                return True, f"activated {name} ({bid}) (native Cocoa)"
     except Exception:
         pass
 
-    # 2. System open -a / osascript fallback
-    names = ("GeForceNOW", "GeForce NOW", "NVIDIA GeForce NOW") if platform == "geforce" else \
-            ("Age of Empires II: Definitive Edition", "Age of Empires II")
-    for name in names:
-        try:
-            subprocess.run(["open", "-a", name], capture_output=True, timeout=5)
-            time.sleep(2)
-            return True, f"activated {name} via open -a"
-        except Exception:
-            pass
-        try:
-            out = subprocess.run(["osascript", "-e",
-                                  f'tell application "{name}" to activate'],
-                                 capture_output=True, text=True, timeout=10)
-            if out.returncode == 0:
-                time.sleep(2)
-                return True, f"activated {name} (osascript)"
-        except Exception:
-            continue
-    return False, "could not activate the game app; gate will decide"
+    return True, "activation attempted; gate will decide"
 
 
 def game_window_ok(platform: str):
