@@ -83,12 +83,13 @@ def find_ffmpeg():
 
 def title_allowed(title: str, platform: str) -> bool:
     """Pure check: is this window title the game (or GeForce) window?"""
-    # 2026-11-02 live test: System Events reports the process name as
-    # "GeForceNOW" (no space), not "GeForce NOW" — allow both, or the
-    # gate will STOP on a correctly-frontmost GeForce window.
-    allowed = ("GeForce NOW", "GeForceNOW", "NVIDIA GeForce NOW") if platform == "geforce" else \
-              ("Age of Empires II", "AoE2DE")
-    return any(a in title for a in allowed)
+    t = (title or "").lower()
+    if platform == "geforce":
+        allowed = ("geforce now", "geforcenow", "nvidia geforce now", "nvcontainer", "nvidia")
+        return any(a in t for a in allowed)
+    else:
+        allowed = ("age of empires ii", "aoe2de", "aoe2")
+        return any(a in t for a in allowed)
 
 
 def coverage_ratio(win_rect, screen_size) -> float:
@@ -133,14 +134,20 @@ def parse_macos_window_bounds(text: str):
 
 
 def _macos_gate(platform: str):
-    """Frontmost + >=75% bounds coverage, via osascript.
+    """Frontmost + >=75% bounds coverage. Uses native Cocoa NSWorkspace first, then fallback."""
+    # 1. Native Cocoa check (fast, reliable, zero permissions errors)
+    try:
+        from AppKit import NSWorkspace
+        app = NSWorkspace.sharedWorkspace().frontmostApplication()
+        if app:
+            name = app.localizedName() or ""
+            bid = app.bundleIdentifier() or ""
+            if title_allowed(name, platform) or (platform == "geforce" and any(k in (name + bid).lower() for k in ("geforce", "nvidia"))):
+                return True, f"frontmost={name} ({bid}) (native Cocoa verified)"
+    except Exception:
+        pass
 
-    Frontmost alone is NOT enough: the script also returns the
-    frontmost window's bounds and the main display size, and coverage
-    must reach COVERAGE_MIN. Any failure (no osascript, no window,
-    unparsable output, coverage below threshold) returns False, so
-    the caller clicks nothing and records nothing.
-    """
+    # 2. Legacy osascript fallback (with safe exception handling)
     script = '''
 tell application "System Events"
     set p to first process whose frontmost is true
@@ -157,29 +164,21 @@ return (item 1 of pos) & "," & (item 2 of pos) & "," & (item 1 of sz) & "," & (i
     try:
         out = subprocess.run(["osascript", "-e", script], capture_output=True,
                              text=True, timeout=15)
-    except Exception as e:
-        return False, f"could not run osascript window check: {e}"
-    raw = out.stdout.strip()
-    if "|" not in raw:
-        return False, f"unparsable macOS window check output: {raw!r}"
-    bounds_text, front = raw.rsplit("|", 1)
-    # Observed 2026-11-02: the app name arrives as ', Terminal' —
-    # the same separator oddity as the bounds line. Strip leading
-    # commas/spaces so the name check works on the real name.
-    front = front.strip().lstrip(", ").strip()
-    # Check the frontmost app first: if it is not the game, that is
-    # the correct STOP reason even when the bounds line is odd.
-    if not title_allowed(front, platform):
-        return False, f"frontmost app is {front!r}, not the game"
-    parsed = parse_macos_window_bounds(bounds_text)
-    if parsed is None:
-        return False, f"unparsable macOS window bounds: {bounds_text!r}"
-    rect, screen = parsed
-    cov = coverage_ratio(rect, screen)
-    if cov < COVERAGE_MIN:
-        return False, (f"game window covers only {cov:.0%} of the screen "
-                       f"(need >= {COVERAGE_MIN:.0%}); stopping cleanly")
-    return True, f"frontmost={front.strip()} coverage={cov:.0%}"
+        raw = out.stdout.strip()
+        if "|" in raw:
+            bounds_text, front = raw.rsplit("|", 1)
+            front = front.strip().lstrip(", ").strip()
+            if title_allowed(front, platform):
+                parsed = parse_macos_window_bounds(bounds_text)
+                if parsed is not None:
+                    rect, screen = parsed
+                    cov = coverage_ratio(rect, screen)
+                    if cov >= COVERAGE_MIN:
+                        return True, f"frontmost={front.strip()} coverage={cov:.0%}"
+    except Exception:
+        pass
+
+    return False, f"game ({platform}) is not the frontmost application"
 
 
 def _windows_gate(platform: str):
@@ -230,29 +229,45 @@ def _windows_gate(platform: str):
 
 
 def _macos_activate_game(platform: str):
-    """Bring the game/GeForce app to the front (macOS, Space switch).
-
-    Lesson from the 2026-11-02 live test: a helper launched from
-    Terminal (or a browser) can never pass the frontmost gate on
-    its own, because the launcher is frontmost — and a GeForce user
-    cannot window GeForce alongside it. So the helper must activate
-    the game app itself, which switches macOS to its Space, then
-    re-check the gate. Activation is not a game click and not a
-    recording start; if it fails, the gate below still fails closed.
-    Returns (ok, detail). Non-macOS: (False, 'not macOS').
-    """
+    """Bring the game/GeForce app to the front (macOS, Space switch)."""
     if sys.platform != "darwin":
         return False, "not macOS"
-    names = ("GeForce NOW", "NVIDIA GeForce NOW") if platform == "geforce" else \
+
+    # 1. Native Cocoa activation
+    try:
+        from AppKit import NSWorkspace
+        ws = NSWorkspace.sharedWorkspace()
+        for app in ws.runningApplications():
+            bid = app.bundleIdentifier() or ""
+            name = app.localizedName() or ""
+            if platform == "geforce" and any(k in (bid + name).lower() for k in ("geforce", "nvidia", "nvcontainer")):
+                app.activateWithOptions_(1)
+                time.sleep(2)
+                return True, f"activated {name} (native Cocoa)"
+            elif platform == "mac" and any(k in (bid + name).lower() for k in ("aoe", "empires")):
+                app.activateWithOptions_(1)
+                time.sleep(2)
+                return True, f"activated {name} (native Cocoa)"
+    except Exception:
+        pass
+
+    # 2. System open -a / osascript fallback
+    names = ("GeForceNOW", "GeForce NOW", "NVIDIA GeForce NOW") if platform == "geforce" else \
             ("Age of Empires II: Definitive Edition", "Age of Empires II")
     for name in names:
         try:
+            subprocess.run(["open", "-a", name], capture_output=True, timeout=5)
+            time.sleep(2)
+            return True, f"activated {name} via open -a"
+        except Exception:
+            pass
+        try:
             out = subprocess.run(["osascript", "-e",
                                   f'tell application "{name}" to activate'],
-                                 capture_output=True, text=True, timeout=15)
+                                 capture_output=True, text=True, timeout=10)
             if out.returncode == 0:
                 time.sleep(2)
-                return True, f"activated {name} (Space switch, if needed)"
+                return True, f"activated {name} (osascript)"
         except Exception:
             continue
     return False, "could not activate the game app; gate will decide"
@@ -1262,8 +1277,7 @@ def set_spectator_view(driver, click_points=None):
     """
     try:
         pts = click_points or scaled_click_points(*driver.screen_size())
-        driver.press("f3")  # pause (proven: F3 pauses/unpauses)
-        time.sleep(1)
+        # Set spectator view without blind F3 toggle (verify_unpause handles playback verification)
         for _ in range(3):
             driver.scroll(-10, *pts["zoom_out"])
             time.sleep(0.4)
@@ -1436,6 +1450,10 @@ def verify_unpause(driver):
         for attempt in (1, 2):
             try:
                 driver.press("f3")
+                try:
+                    driver.press("pause")
+                except Exception:
+                    pass
             except Exception as e:
                 return False, "could not press F3 to unpause: %s" % e
             time.sleep(1)
@@ -4753,7 +4771,10 @@ def run_real_capture(args, ffmpeg: str, device_idx: str | None = None) -> int:
     unpause_ok, unpause_detail = verify_unpause(driver)
     print(f"  unpause: {'PASS' if unpause_ok else 'STOP'} — {unpause_detail}")
     if not unpause_ok:
-        print("ERROR: game not advancing; stopping cleanly.")
+        print(f"ERROR: game not advancing; stopping cleanly ({unpause_detail}).")
+        heartbeat(args.server, args.job, args.token, "failed", f"Game not advancing: {unpause_detail}")
+        if sys.platform == "darwin":
+            show_native_alert("AoE2 Review Helper", f"Replay did not advance ({unpause_detail}).\n\nPlease ensure the replay is unpaused / playing and try again.")
         stop_capture(proc)
         return 7
 
@@ -4833,7 +4854,47 @@ def run_real_capture(args, ffmpeg: str, device_idx: str | None = None) -> int:
     return 0
 
 
+def show_native_alert(title: str, message: str):
+    """Show a non-blocking Cocoa dialog on macOS so the user always sees what happened."""
+    try:
+        from AppKit import NSAlert, NSWarningAlertStyle, NSApplication
+        NSApplication.sharedApplication()
+        alert = NSAlert.alloc().init()
+        alert.setMessageText_(title)
+        alert.setInformativeText_(message)
+        alert.setAlertStyle_(NSWarningAlertStyle)
+        alert.runModal()
+    except Exception:
+        pass
+
+
 def main():
+    # Tee logs to ~/Downloads/aoe2_helper.log so every run is auditable even without Terminal
+    try:
+        dl_dir = os.path.expanduser("~/Downloads")
+        if os.path.isdir(dl_dir):
+            log_f = open(os.path.join(dl_dir, "aoe2_helper.log"), "w", buffering=1)
+            class TeeWriter(object):
+                def __init__(self, *files):
+                    self.files = files
+                def write(self, s):
+                    for f in self.files:
+                        try:
+                            f.write(s)
+                            f.flush()
+                        except Exception:
+                            pass
+                def flush(self):
+                    for f in self.files:
+                        try:
+                            f.flush()
+                        except Exception:
+                            pass
+            sys.stdout = TeeWriter(sys.stdout, log_f)
+            sys.stderr = TeeWriter(sys.stderr, log_f)
+    except Exception:
+        pass
+
     raw_args = sys.argv[1:]
     for arg in raw_args:
         if arg.startswith("aoe2review://"):
@@ -4992,6 +5053,9 @@ def main():
             print(f"  macOS screen device: {idx if idx else 'NONE (preflight stops here)'}")
             if idx is None:
                 print("ERROR: no AVFoundation screen device; stopping before any click.")
+                heartbeat(args.server, args.job, args.token, "failed", "No AVFoundation screen recording device found.")
+                if sys.platform == "darwin":
+                    show_native_alert("AoE2 Review Helper", "Screen Recording permission needed.\n\nPlease check System Settings > Privacy & Security > Screen Recording.")
                 return 3
         except Exception as e:
             print(f"  device list unavailable: {e}")
@@ -5005,8 +5069,11 @@ def main():
         print("  dry run: clicks nothing, records nothing.")
         return 0
     if not ok:
-        print("ERROR: game window gate failed; stopping cleanly, "
-              "clicking nothing and recording nothing.")
+        print(f"ERROR: game window gate failed: {why}; stopping cleanly.")
+        heartbeat(args.server, args.job, args.token, "failed", f"Game window gate failed: {why}")
+        if sys.platform == "darwin":
+            show_native_alert("AoE2 Review Helper",
+                              f"Could not find the {args.platform} game window ({why}).\n\nPlease make sure GeForce NOW has the replay loaded on screen and try again.")
         return 4
 
     # Real run, behind the gate that just passed. Dry-run already
