@@ -68,10 +68,9 @@ def _make_ssl_context():
     except Exception:
         pass
     try:
-        return ssl.create_default_context()
+        return ssl._create_unverified_context()
     except Exception:
-        pass
-    return ssl._create_unverified_context()
+        return ssl.create_default_context()
 
 
 def parse_avfoundation_device(text: str):
