@@ -59,6 +59,21 @@ COVERAGE_MIN = 0.75
 KEEPALIVE_EVERY_S = 120  # GeForce idle warning: answer before it kills the session
 
 
+def _make_ssl_context():
+    """Create a reliable SSL context that succeeds on macOS Python without bundled certs."""
+    import ssl
+    try:
+        import certifi
+        return ssl.create_default_context(cafile=certifi.where())
+    except Exception:
+        pass
+    try:
+        return ssl.create_default_context()
+    except Exception:
+        pass
+    return ssl._create_unverified_context()
+
+
 def parse_avfoundation_device(text: str):
     for line in text.splitlines():
         m = re.search(r"\[(\d+)\]\s+Capture screen", line)
@@ -133,22 +148,28 @@ def parse_macos_window_bounds(text: str):
         return None
 
 
-def _macos_gate(platform: str):
-    """Frontmost + >=75% bounds coverage. Uses native Cocoa NSWorkspace first, then fallback."""
-    # 1. Native Cocoa check (fast, reliable, zero permissions errors)
-    try:
-        from AppKit import NSWorkspace
-        app = NSWorkspace.sharedWorkspace().frontmostApplication()
-        if app:
-            name = app.localizedName() or ""
-            bid = app.bundleIdentifier() or ""
-            if title_allowed(name, platform) or (platform == "geforce" and (bid == "com.nvidia.gfnpc.mall" or "geforce now" in name.lower())):
-                return True, f"frontmost={name} ({bid}) (native Cocoa verified)"
-    except Exception:
-        pass
+def _macos_gate(platform: str, timeout_s: float = 8.0):
+    """Frontmost + >=75% bounds coverage. Uses native Cocoa NSWorkspace with polling."""
+    t0 = time.time()
+    last_name = "unknown"
+    last_bid = "unknown"
 
-    # 2. Legacy osascript fallback (with safe exception handling)
-    script = '''
+    while (time.time() - t0) <= timeout_s:
+        # 1. Native Cocoa check (fast, reliable, zero permissions errors)
+        try:
+            from AppKit import NSWorkspace
+            app = NSWorkspace.sharedWorkspace().frontmostApplication()
+            if app:
+                name = app.localizedName() or ""
+                bid = app.bundleIdentifier() or ""
+                last_name, last_bid = name, bid
+                if title_allowed(name, platform) or (platform == "geforce" and (bid == "com.nvidia.gfnpc.mall" or "geforce now" in name.lower())):
+                    return True, f"frontmost={name} ({bid}) (native Cocoa verified)"
+        except Exception:
+            pass
+
+        # 2. Legacy osascript fallback (with safe exception handling)
+        script = '''
 tell application "System Events"
     set p to first process whose frontmost is true
     set w to first window of p
@@ -161,24 +182,28 @@ set sw to (item 3 of db) - (item 1 of db)
 set sh to (item 4 of db) - (item 2 of db)
 return (item 1 of pos) & "," & (item 2 of pos) & "," & (item 1 of sz) & "," & (item 2 of sz) & "," & sw & "," & sh & "|" & appName
 '''
-    try:
-        out = subprocess.run(["osascript", "-e", script], capture_output=True,
-                             text=True, timeout=15)
-        raw = out.stdout.strip()
-        if "|" in raw:
-            bounds_text, front = raw.rsplit("|", 1)
-            front = front.strip().lstrip(", ").strip()
-            if title_allowed(front, platform):
-                parsed = parse_macos_window_bounds(bounds_text)
-                if parsed is not None:
-                    rect, screen = parsed
-                    cov = coverage_ratio(rect, screen)
-                    if cov >= COVERAGE_MIN:
-                        return True, f"frontmost={front.strip()} coverage={cov:.0%}"
-    except Exception:
-        pass
+        try:
+            out = subprocess.run(["osascript", "-e", script], capture_output=True,
+                                 text=True, timeout=5)
+            raw = out.stdout.strip()
+            if "|" in raw:
+                bounds_text, front = raw.rsplit("|", 1)
+                front = front.strip().lstrip(", ").strip()
+                if title_allowed(front, platform):
+                    parsed = parse_macos_window_bounds(bounds_text)
+                    if parsed is not None:
+                        rect, screen = parsed
+                        cov = coverage_ratio(rect, screen)
+                        if cov >= COVERAGE_MIN:
+                            return True, f"frontmost={front.strip()} coverage={cov:.0%}"
+        except Exception:
+            pass
 
-    return False, f"game ({platform}) is not the frontmost application"
+        if (time.time() - t0) >= timeout_s:
+            break
+        time.sleep(0.5)
+
+    return False, f"game ({platform}) is not the frontmost application (currently frontmost is {last_name} [{last_bid}])"
 
 
 def _windows_gate(platform: str):
@@ -233,13 +258,17 @@ def _macos_activate_game(platform: str):
     if sys.platform != "darwin":
         return False, "not macOS"
 
-    # 1. System open -a directly brings the application and its Space to front
+    # 1. System open -b and open -a directly brings the application and its Space to front
     if platform == "geforce":
-        for cand in ("/Applications/GeForceNOW.app", "GeForceNOW", "GeForce NOW", "NVIDIA GeForce NOW"):
+        for cmd in [
+            ["open", "-b", "com.nvidia.gfnpc.mall"],
+            ["open", "-a", "/Applications/GeForceNOW.app"],
+            ["open", "-a", "GeForceNOW"],
+            ["open", "-a", "NVIDIA GeForce NOW"],
+        ]:
             try:
-                res = subprocess.run(["open", "-a", cand], capture_output=True, timeout=5)
+                res = subprocess.run(cmd, capture_output=True, timeout=5)
                 if res.returncode == 0:
-                    time.sleep(2)
                     break
             except Exception:
                 pass
@@ -248,7 +277,6 @@ def _macos_activate_game(platform: str):
             try:
                 res = subprocess.run(["open", "-a", cand], capture_output=True, timeout=5)
                 if res.returncode == 0:
-                    time.sleep(2)
                     break
             except Exception:
                 pass
@@ -265,19 +293,20 @@ def _macos_activate_game(platform: str):
             name = app.localizedName() or ""
             if platform == "geforce" and (bid == "com.nvidia.gfnpc.mall" or any(k in name.lower() for k in ("geforce now", "geforcenow"))):
                 app.activateWithOptions_(3)  # NSApplicationActivateAllWindows | NSApplicationActivateIgnoringOtherApps
-                time.sleep(2.5)
+                time.sleep(1.5)
                 return True, f"activated {name} ({bid}) (native Cocoa)"
             elif platform == "mac" and any(k in (bid + name).lower() for k in ("aoe", "empires")):
                 app.activateWithOptions_(3)
-                time.sleep(2.5)
+                time.sleep(1.5)
                 return True, f"activated {name} ({bid}) (native Cocoa)"
     except Exception:
         pass
 
+    time.sleep(1.0)
     return True, "activation attempted; gate will decide"
 
 
-def game_window_ok(platform: str):
+def game_window_ok(platform: str, timeout_s: float = 8.0):
     """Frontmost/foreground + >=75% coverage gate, fail-closed.
 
     macOS: osascript frontmost + bounds. Windows: Win32 foreground +
@@ -286,7 +315,7 @@ def game_window_ok(platform: str):
     instead of clicking blindly.
     """
     if sys.platform == "darwin":
-        return _macos_gate(platform)
+        return _macos_gate(platform, timeout_s=timeout_s)
     if sys.platform == "win32":
         return _windows_gate(platform)
     return False, "window gate is not available on this platform; refusing to click blindly"
@@ -4773,13 +4802,19 @@ def run_real_capture(args, ffmpeg: str, device_idx: str | None = None) -> int:
     heartbeat(args.server, args.job, args.token, "recording", f"capturing to {video_path}")
 
     unpause_ok, unpause_detail = verify_unpause(driver)
-    print(f"  unpause: {'PASS' if unpause_ok else 'STOP'} — {unpause_detail}")
+    print(f"  unpause: {'PASS' if unpause_ok else 'STOP'} : {unpause_detail}")
     if not unpause_ok:
         print(f"ERROR: game not advancing; stopping cleanly ({unpause_detail}).")
         heartbeat(args.server, args.job, args.token, "failed", f"Game not advancing: {unpause_detail}")
         if sys.platform == "darwin":
             show_native_alert("AoE2 Review Helper", f"Replay did not advance ({unpause_detail}).\n\nPlease ensure the replay is unpaused / playing and try again.")
         stop_capture(proc)
+        for temp_f in (video_path, probe_path, cap_log):
+            if temp_f and os.path.exists(temp_f):
+                try:
+                    os.remove(temp_f)
+                except Exception:
+                    pass
         return 7
 
     start_t = time.time()
@@ -4788,72 +4823,79 @@ def run_real_capture(args, ffmpeg: str, device_idx: str | None = None) -> int:
     camera_events = []
     last_reason = "base_eco_check"
 
-    with capture_session(proc):
-        try:
-            while (time.time() - start_t) < args.duration_secs:
-                interval = next_tour_interval(30, last_reason, pace=args.camera_pace)
-                time.sleep(interval)
-                elapsed = time.time() - start_t
-                if elapsed >= args.duration_secs:
-                    break
-
-                g_ok, _ = game_window_ok(args.platform)
-                if not g_ok:
-                    print("Game window lost or hidden; stopping tour cleanly.")
-                    break
-
-                if director is not None:
-                    step_img = os.path.join(tempfile.gettempdir(), f"aoe2_step_{os.getpid()}.png")
-                    driver.screenshot_to(step_img)
-                    try:
-                        pt, last_reason, ddebug = director.next_target(step_img, elapsed)
-                        driver.click(*pt)
-                        evt = {"elapsed_s": int(round(elapsed)), "point": list(pt), "reason": last_reason}
-                        if ddebug:
-                            evt["debug"] = ddebug
-                        camera_events.append(evt)
-                    finally:
-                        try:
-                            os.unlink(step_img)
-                        except OSError:
-                            pass
-                elif tour_pts:
-                    pt = tour_pts[tour_i % len(tour_pts)]
-                    tour_i += 1
-                    driver.click(*pt)
-                    last_reason = "tour"
-
-                if time.time() - last_keepalive_t >= KEEPALIVE_EVERY_S:
-                    last_keepalive_t = time.time()
-                    ka_msg = keep_alive(driver)
-                    heartbeat(args.server, args.job, args.token, "keep_alive",
-                              f"elapsed {int(elapsed)}s: {ka_msg}")
-        except KeyboardInterrupt:
-            print("Capture interrupted by operator (Ctrl+C). Finalising MP4...")
-            return 130
-
-    heartbeat(args.server, args.job, args.token, "capture_stopped",
-              f"finished {int(time.time() - start_t)}s capture")
-
-    if args.server:
-        heartbeat(args.server, args.job, args.token, "uploading", "uploading video to server")
-        try:
-            res = upload_job(args.server, args.job, args.token, video_path, args.platform,
-                             replay_choice=args.replay_choice, camera_events=camera_events)
-            print(f"Upload complete: {res}")
-            heartbeat(args.server, args.job, args.token, "uploaded", "upload finished")
-        except Exception as e:
-            print(f"Upload failed: {e}")
-            heartbeat(args.server, args.job, args.token, "upload_failed", str(e))
-
-    # Automatic disk space safeguard: ensure NO temporary capture files remain on Mac
-    for temp_f in (video_path, probe_path, cap_log):
-        if temp_f and os.path.exists(temp_f):
+    try:
+        with capture_session(proc):
             try:
-                os.remove(temp_f)
-                print(f"Auto-cleaned local temporary capture file: {os.path.basename(temp_f)}")
-            except Exception as ce:
-                print(f"Cleanup note: {ce}")
+                while (time.time() - start_t) < args.duration_secs:
+                    interval = next_tour_interval(30, last_reason, pace=args.camera_pace)
+                    time.sleep(interval)
+                    elapsed = time.time() - start_t
+                    if elapsed >= args.duration_secs:
+                        break
+
+                    g_ok, why = game_window_ok(args.platform, timeout_s=1.0)
+                    if not g_ok:
+                        print(f"Game window lost focus ({why}); attempting to reactivate...")
+                        _macos_activate_game(args.platform)
+                        g_ok, why = game_window_ok(args.platform, timeout_s=5.0)
+                        if not g_ok:
+                            print(f"Game window lost or hidden after grace period ({why}); stopping tour cleanly.")
+                            break
+
+                    if director is not None:
+                        step_img = os.path.join(tempfile.gettempdir(), f"aoe2_step_{os.getpid()}.png")
+                        driver.screenshot_to(step_img)
+                        try:
+                            pt, last_reason, ddebug = director.next_target(step_img, elapsed)
+                            driver.click(*pt)
+                            evt = {"elapsed_s": int(round(elapsed)), "point": list(pt), "reason": last_reason}
+                            if ddebug:
+                                evt["debug"] = ddebug
+                            camera_events.append(evt)
+                        except Exception as de:
+                            print(f"Director step notice: {de}")
+                        finally:
+                            try:
+                                os.unlink(step_img)
+                            except OSError:
+                                pass
+                    elif tour_pts:
+                        pt = tour_pts[tour_i % len(tour_pts)]
+                        tour_i += 1
+                        driver.click(*pt)
+                        last_reason = "tour"
+
+                    if time.time() - last_keepalive_t >= KEEPALIVE_EVERY_S:
+                        last_keepalive_t = time.time()
+                        ka_msg = keep_alive(driver)
+                        heartbeat(args.server, args.job, args.token, "keep_alive",
+                                  f"elapsed {int(elapsed)}s: {ka_msg}")
+            except KeyboardInterrupt:
+                print("Capture interrupted by operator (Ctrl+C). Finalising MP4...")
+                return 130
+
+        heartbeat(args.server, args.job, args.token, "capture_stopped",
+                  f"finished {int(time.time() - start_t)}s capture")
+
+        if args.server:
+            heartbeat(args.server, args.job, args.token, "uploading", "uploading video to server")
+            try:
+                res = upload_job(args.server, args.job, args.token, video_path, args.platform,
+                                 replay_choice=args.replay_choice, camera_events=camera_events)
+                print(f"Upload complete: {res}")
+                heartbeat(args.server, args.job, args.token, "uploaded", "upload finished")
+            except Exception as e:
+                print(f"Upload failed: {e}")
+                heartbeat(args.server, args.job, args.token, "upload_failed", str(e))
+    finally:
+        # Automatic disk space safeguard: ensure NO temporary capture files remain on Mac
+        for temp_f in (video_path, probe_path, cap_log):
+            if temp_f and os.path.exists(temp_f):
+                try:
+                    os.remove(temp_f)
+                    print(f"Auto-cleaned local temporary capture file: {os.path.basename(temp_f)}")
+                except Exception as ce:
+                    print(f"Cleanup note: {ce}")
 
     return 0
 
@@ -4994,11 +5036,13 @@ def main():
 
     if not args.job or not args.token:
         print(f"Connecting to {args.server} to fetch active review job...")
-        import urllib.request, json, ssl
-        ctx = ssl._create_unverified_context()
+        import urllib.request, json
+        kwargs = {"timeout": 8}
+        if args.server.startswith("https://"):
+            kwargs["context"] = _make_ssl_context()
         try:
             req = urllib.request.Request(f"{args.server}/api/jobs/latest-pending", headers={"Accept": "application/json"})
-            with urllib.request.urlopen(req, context=ctx, timeout=8) as resp:
+            with urllib.request.urlopen(req, **kwargs) as resp:
                 data = json.loads(resp.read().decode('utf-8'))
                 args.job = data["job_id"]
                 args.token = data["token"]
@@ -5066,9 +5110,9 @@ def main():
 
     if sys.platform == "darwin":
         act_ok, act_why = _macos_activate_game(args.platform)
-        print(f"  activate game: {'OK' if act_ok else 'FAILED'} — {act_why}")
-    ok, why = game_window_ok(args.platform)
-    print(f"  window gate: {'PASS' if ok else 'STOP'} — {why}")
+        print(f"  activate game: {'OK' if act_ok else 'FAILED'} : {act_why}")
+    ok, why = game_window_ok(args.platform, timeout_s=8.0)
+    print(f"  window gate: {'PASS' if ok else 'STOP'} : {why}")
     if args.dry_run:
         print("  dry run: clicks nothing, records nothing.")
         return 0
@@ -5096,7 +5140,10 @@ def heartbeat(server: str, job_id: str, token: str, stage: str, detail: str = ""
         req = urllib.request.Request(
             f"{server.rstrip('/')}/api/jobs/{job_id}/heartbeat?token={token}",
             data=body, method="POST", headers={"Content-Type": "application/json"})
-        with urllib.request.urlopen(req, timeout=10) as r:
+        kwargs = {"timeout": 10}
+        if server.startswith("https://"):
+            kwargs["context"] = _make_ssl_context()
+        with urllib.request.urlopen(req, **kwargs) as r:
             return r.status == 200
     except Exception:
         return False
@@ -5113,7 +5160,10 @@ def post_parser(server: str, job_id: str, token: str, parser: dict):
         f"{server.rstrip('/')}/api/jobs/{job_id}/parser?token={token}",
         data=body, method="POST", headers={"Content-Type": "application/json"})
     try:
-        with urllib.request.urlopen(req, timeout=120) as r:
+        kwargs = {"timeout": 120}
+        if server.startswith("https://"):
+            kwargs["context"] = _make_ssl_context()
+        with urllib.request.urlopen(req, **kwargs) as r:
             return True, json.loads(r.read().decode())
     except Exception as e:
         return False, str(e)
@@ -5158,8 +5208,11 @@ def upload_video(server: str, job_id: str, token: str, video_path: str,
     parts = urllib.parse.urlparse(server.rstrip("/"))
     use_https = parts.scheme == "https"
     conn_cls = http.client.HTTPSConnection if use_https else http.client.HTTPConnection
+    kwargs = {"timeout": 600}
+    if use_https:
+        kwargs["context"] = _make_ssl_context()
     conn = conn_cls(parts.hostname, parts.port or (443 if use_https else 80),
-                    timeout=600)
+                    **kwargs)
     try:
         conn.putrequest("POST", f"/api/jobs/{job_id}/upload?token={token}")
         conn.putheader("Content-Type", "video/mp4")
